@@ -5,28 +5,55 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
 	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<label>Helvar Binding Thing</label>
-		<description>Sample thing for Helvar Binding</description>
 
-		<channels>
-			<channel id="channel1" typeId="sample-channel" />
-		</channels>
+	<bridge-type id="router">
+		<label>Helvar Bridge</label>
+		<description>This represents a Helvar Router</description>
+
+		<properties>
+			<property name="vendor">Helvar</property>
+		</properties>
 
 		<config-description>
-			<parameter name="config1" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
+			<parameter name="ipAddress" type="text">
+				<context>network-address</context>
+				<label>Network Address</label>
+				<description>The network address of the helvar router.</description>0
+				<required>true</required>
+			</parameter>
+			<parameter name="port" type="integer" required="false" min="1" max="65535">
+				<label>Port</label>
+				<description>Port TCP port the Helvar router is expecting to recieve HelvarNet requests on.
+				Default is 50000.</description>
+				<default>50000</default>
+			</parameter>
+
+		</config-description>
+	</bridge-type>
+
+	<thing-type id="dimmer">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="router"/>
+		</supported-bridge-type-refs>
+
+		<label>Dimmer</label>
+		<description>Controls dimmable loads</description>
+
+		<config-description>
+			<parameter name="integrationId" type="integer" required="true">
+				<label>Integration ID</label>
+				<description>Address of dimmer in the Lutron lighting system</description>
+			</parameter>
+			<parameter name="fadeInTime" type="decimal">
+				<label>Fade In Time</label>
+				<description>Fade time in seconds when turning on the light</description>
+			</parameter>
+			<parameter name="fadeOutTime" type="decimal">
+				<label>Fade Out Time</label>
+				<description>Fade time in seconds when turning off the light</description>
 			</parameter>
 		</config-description>
-
 	</thing-type>
 
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>helvarItem</item-type>
-		<label>Helvar Binding Channel</label>
-		<description>Sample channel for Helvar Binding</description>
-	</channel-type>
 
 </thing:thing-descriptions>

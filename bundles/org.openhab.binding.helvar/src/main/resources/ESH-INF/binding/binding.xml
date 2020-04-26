@@ -4,7 +4,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/binding/v1.0.0 https://openhab.org/schemas/binding-1.0.0.xsd">
 
 	<name>Helvar Binding</name>
-	<description>This is the binding for Helvar.</description>
+	<description>This is the binding for Helvar Routers.</description>
 	<author>Tom Playford</author>
 
 </binding:binding>

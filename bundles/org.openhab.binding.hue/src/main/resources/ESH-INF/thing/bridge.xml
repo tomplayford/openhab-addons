@@ -17,7 +17,7 @@
 			<parameter name="ipAddress" type="text">
 				<context>network-address</context>
 				<label>Network Address</label>
-				<description>Network address of the Hue bridge.</description>
+				<description>Network address of the Hue bridge.</description>0
 				<required>true</required>
 			</parameter>
 			<parameter name="port" type="integer" required="false" min="1" max="65535">
