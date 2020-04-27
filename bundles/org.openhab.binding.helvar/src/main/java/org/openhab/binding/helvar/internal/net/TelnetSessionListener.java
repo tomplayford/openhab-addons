@@ -19,7 +19,6 @@ import java.io.IOException;
 /**
  * Listener for telnet session events.
  *
- * @author Allan Tong - Initial contribution
  */
 @NonNullByDefault
 public interface TelnetSessionListener {

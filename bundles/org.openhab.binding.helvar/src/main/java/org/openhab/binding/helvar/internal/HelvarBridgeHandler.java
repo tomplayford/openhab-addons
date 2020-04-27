@@ -16,12 +16,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.HOST;
+import static org.openhab.binding.helvar.internal.HelvarCommandType.QUERY_CLUSTERS;
 
-@NonNullByDefault
 public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
+
+
+    private static final int DEFAULT_RECONNECT_MINUTES = 5;
+    private static final int DEFAULT_HEARTBEAT_MINUTES = 5;
+    private static final int DEFAULT_SEND_DELAY_SECONDS = 0;
+    private static final long KEEPALIVE_TIMEOUT_SECONDS = 30;
 
     private final Logger logger = LoggerFactory.getLogger(HelvarBridgeHandler.class);
 
@@ -30,6 +37,11 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     private TelnetSession session;
     private BlockingQueue<HelvarCommand> sendQueue = new LinkedBlockingQueue<>();
+
+    private Thread messageSender;
+    private ScheduledFuture<?> keepAlive;
+    private ScheduledFuture<?> keepAliveReconnect;
+    private ScheduledFuture<?> connectRetryJob;
 
 //    private Thread messageSender;
 
@@ -41,20 +53,10 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
         this.session = new TelnetSession();
 
-        this.session.addListener(new TelnetSessionListener() {
-            @Override
-            public void inputAvailable() { parseUpdates(); }
-
-            @Override
-            public void error(IOException exception) {
-                logger.debug("IO error {}", exception.getMessage());
-            }
-        });
-
     }
 
     private synchronized void reconnect() {
-        logger.debug("Keepalive timeout, attempting to reconnect to the bridge");
+        logger.debug("Keepalive timeout, attempting to reconnect to the router");
 
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.DUTY_CYCLE);
         disconnect();
@@ -68,6 +70,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
         for (String line : this.session.readLines()) {
             if (line.trim().equals("")) {
+                logger.trace("Received a blank line, ignoring");
                 // Sometimes we get an empty line (possibly only when prompts are disabled). Ignore them.
                 continue;
             }
@@ -136,6 +139,20 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             return;
         }
 
+        this.session.addListener(new TelnetSessionListener() {
+            @Override
+            public void inputAvailable() {
+                logger.trace("Input Available called");
+                parseUpdates();
+            }
+
+            @Override
+            public void error(IOException exception) {
+                logger.debug("IO error {}", exception.getMessage());
+            }
+        });
+
+
         String ip = this.helvarBridgeConfig.getIpAddress();
 
         if (ip == null || ip.isEmpty()) {
@@ -157,6 +174,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
                 // Success!
                 logger.debug("Successfully connected to router at {}", this.helvarBridgeConfig.getIpAddress());
                 updateStatus(ThingStatus.ONLINE);
+
+                sendTestCommand();
+                startSenderThread();
             }
 
         } catch (IOException e) {
@@ -170,9 +190,60 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             logger.error("Unknown error connecting to router at {}. {}", this.helvarBridgeConfig.getIpAddress(), e.getMessage());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_INITIALIZING_ERROR, "login interrupted");
             disconnect();
-
         }
 
+    }
+
+    private void sendCommandsThread() {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                HelvarCommand command = sendQueue.take();
+
+                logger.debug("Sending command {}", command);
+
+                try {
+                    session.writeLine(command.toString());
+                } catch (IOException e) {
+                    logger.warn("Communication error, will try to reconnect. Error: {}", e.getMessage());
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+
+                    sendQueue.add(command); // Requeue command
+
+                    reconnect();
+
+                    // reconnect() will start a new thread; terminate this one
+                    break;
+                }
+                if (DEFAULT_SEND_DELAY_SECONDS > 0) {
+                    Thread.sleep(DEFAULT_SEND_DELAY_SECONDS); // introduce delay to throttle send rate
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void startSenderThread() {
+        messageSender = new Thread(this::sendCommandsThread, "Helvar sender");
+        messageSender.start();
+
+        logger.debug("Starting keepAlive job with interval {}", DEFAULT_HEARTBEAT_MINUTES);
+        keepAlive = scheduler.scheduleWithFixedDelay(this::sendKeepAlive, DEFAULT_HEARTBEAT_MINUTES, DEFAULT_HEARTBEAT_MINUTES,
+                TimeUnit.MINUTES);
+    }
+
+    private void sendKeepAlive() {
+        logger.debug("Scheduling keepalive reconnect job");
+
+        // Reconnect if no response is received within 30 seconds.
+        keepAliveReconnect = scheduler.schedule(this::reconnect, KEEPALIVE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+//        logger.trace("Sending keepalive query");
+//        sendCommand(new LutronCommand(LutronOperation.QUERY, LutronCommandType.SYSTEM, -1, SYSTEM_DBEXPORTDATETIME));
+    }
+
+    private void sendTestCommand() {
+        this.sendCommand(new HelvarCommand(QUERY_CLUSTERS));
     }
 
     void sendCommand(HelvarCommand command) {
@@ -182,13 +253,32 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
     private synchronized void disconnect() {
         logger.debug("Disconnecting from Router");
 
+        if (connectRetryJob != null) {
+            connectRetryJob.cancel(true);
+        }
+
+        if (this.keepAlive != null) {
+            this.keepAlive.cancel(true);
+        }
+
+        if (this.keepAliveReconnect != null) {
+            // This method can be called from the keepAliveReconnect thread. Make sure
+            // we don't interrupt ourselves, as that may prevent the reconnection attempt.
+            this.keepAliveReconnect.cancel(false);
+        }
+
+        if (messageSender != null && messageSender.isAlive()) {
+            messageSender.interrupt();
+        }
+
+        this.session.clearListeners();
+
         try {
             this.session.close();
         } catch (IOException e) {
             logger.warn("Error disconnecting: {}", e.getMessage());
         }
     }
-
 
     private boolean login() throws IOException, InterruptedException {
         this.session.open(helvarBridgeConfig.getIpAddress(), helvarBridgeConfig.getPort());
@@ -236,9 +326,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         this.thing = thing;
         this.helvarBridgeConfig = newConfig;
 
-
         connect();
-
     }
 
 

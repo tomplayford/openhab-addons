@@ -12,12 +12,9 @@ public class HelvarCommand {
     private final String defaultHelvarNetVersion = "1";
     private final String defaultHelvarTerminationChar = "#";
 
-    public HelvarCommand(HelvarCommandType commandType, HelvarMessageType messageType, Object... parameters) {
+    public HelvarCommand(HelvarCommandType commandType, Object... parameters) {
 
-        if (messageType == null) {
-            messageType = defaultMessageType;
-        }
-        this.messageType = messageType;
+        this.messageType = defaultMessageType;
         this.commandType = commandType;
 //        this.integrationId = integrationId;
         this.parameters = parameters;

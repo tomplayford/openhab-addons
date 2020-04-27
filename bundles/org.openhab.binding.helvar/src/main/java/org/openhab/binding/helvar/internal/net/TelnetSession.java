@@ -39,6 +39,8 @@ import java.util.regex.Pattern;
  *
  * @author Allan Tong - Initial contribution
  * @author Bob Adair - Fix to readInput and added debug logging
+ * @author Tom Playford - Changes to support HelvarNet termination characters and other strangeness.
+ *
  */
 @NonNullByDefault
 public class TelnetSession implements Closeable {
@@ -47,7 +49,7 @@ public class TelnetSession implements Closeable {
 
     private final Logger logger = LoggerFactory.getLogger(TelnetSession.class);
 
-    private int defaultTimeout = 10;
+    private int defaultTimeout = 10000; // 10 seconds
 
     private TelnetClient telnetClient;
     private @Nullable BufferedReader reader;
@@ -64,7 +66,7 @@ public class TelnetSession implements Closeable {
         this.charBuffer = CharBuffer.allocate(BUFSIZE);
 
         this.telnetClient.setReaderThread(true);
-        this.telnetClient.setDefaultTimeout(defaultTimeout);
+
         this.telnetClient.registerInputListener(new TelnetInputListener() {
             @Override
             public void telnetInputAvailable() {
@@ -107,6 +109,7 @@ public class TelnetSession implements Closeable {
         synchronized (this.charBuffer) {
             logger.trace("TelnetSession open called");
             try {
+                telnetClient.setDefaultTimeout(defaultTimeout);
                 telnetClient.connect(host, port);
                 telnetClient.setKeepAlive(true);
             } catch (IOException e) {
@@ -116,7 +119,7 @@ public class TelnetSession implements Closeable {
 
             if (this.suppressGAOptionHandler == null) {
                 // Only do this once.
-                this.suppressGAOptionHandler = new SuppressGAOptionHandler(true, true, true, true);
+                this.suppressGAOptionHandler = new SuppressGAOptionHandler(false, false, false, false);
 
                 try {
                     this.telnetClient.addOptionHandler(this.suppressGAOptionHandler);
@@ -232,20 +235,28 @@ public class TelnetSession implements Closeable {
         }
     }
 
+    /**
+     *
+     * Read one full HelvarNet command per line.
+     * Commands are terminated with a "#". Partial commands are terminated with a "$".
+     * This function will concatenate the raw sub commands together.
+     *
+     * @return
+     */
     public Iterable<String> readLines() {
         synchronized (this.charBuffer) {
             this.charBuffer.flip();
 
             String bufdata = this.charBuffer.toString();
-            int n = bufdata.lastIndexOf('\n');
+            int n = bufdata.lastIndexOf('#');
             String leftover;
             String[] lines = null;
 
-            if (n != -1) {
+            if (n != -1) { // character found
                 leftover = bufdata.substring(n + 1);
                 bufdata = bufdata.substring(0, n).trim();
 
-                lines = bufdata.split("\r\n");
+                lines = bufdata.split("#");
             } else {
                 leftover = bufdata;
             }
