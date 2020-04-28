@@ -276,7 +276,7 @@ public class TelnetSession implements Closeable {
                 logger.debug("TelnetSession writeLine: outstream is null - session is closed");
                 throw new IOException("Session is closed");
             }
-            out.print(line + "\r\n");
+            out.print(line); // Removed terminating "\r\n". HelvarNet uses "#" and we handle that higher up.
 
             if (out.checkError()) {
                 logger.debug("TelnetSession writeLine: error writing to outstream");
