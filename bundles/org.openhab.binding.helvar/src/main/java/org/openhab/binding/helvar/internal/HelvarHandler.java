@@ -16,9 +16,7 @@ import static org.openhab.binding.helvar.internal.HelvarBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.Thing;
-import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
@@ -32,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author Tom Playford - Initial contribution
  */
 @NonNullByDefault
-public class HelvarHandler extends BaseThingHandler {
+public abstract class HelvarHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(HelvarHandler.class);
 
@@ -42,57 +40,52 @@ public class HelvarHandler extends BaseThingHandler {
         super(thing);
     }
 
+    public abstract HelvarAddress getAddress();
+
+    public abstract void handleUpdate(HelvarCommandType type, String... parameters);
+
+    /**
+     * Queries for any device state needed at initialization time or after losing connectivity to the bridge, and
+     * updates device status. Will be called when bridge status changes to ONLINE and thing has status
+     * OFFLINE:BRIDGE_OFFLINE.
+     */
+    protected abstract void initDeviceState();
+
+    /**
+     * Called when changing thing status to offline. Subclasses may override to take any needed actions.
+     */
+    protected void thingOfflineNotify() {
+    }
+
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_1.equals(channelUID.getId())) {
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
-            }
+    public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
+        logger.debug("Bridge status changed to {} for helvar device handler", bridgeStatusInfo.getStatus());
 
-            // TODO: handle command
+        if (bridgeStatusInfo.getStatus() == ThingStatus.ONLINE
+                && getThing().getStatusInfo().getStatusDetail() == ThingStatusDetail.BRIDGE_OFFLINE) {
+            initDeviceState();
 
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
+        } else if (bridgeStatusInfo.getStatus() == ThingStatus.OFFLINE) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+            thingOfflineNotify();
         }
     }
 
-    @Override
-    public void initialize() {
-        // logger.debug("Start initializing!");
-        config = getConfigAs(HelvarConfiguration.class);
+    protected @Nullable HelvarBridgeHandler getBridgeHandler() {
+        Bridge bridge = getBridge();
 
-        // TODO: Initialize the handler.
-        // The framework requires you to return from this method quickly. Also, before leaving this method a thing
-        // status from one of ONLINE, OFFLINE or UNKNOWN must be set. This might already be the real thing status in
-        // case you can decide it directly.
-        // In case you can not decide the thing status directly (e.g. for long running connection handshake using WAN
-        // access or similar) you should set status UNKNOWN here and then decide the real status asynchronously in the
-        // background.
-
-        // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
-        // the framework is then able to reuse the resources from the thing handler initialization.
-        // we set this upfront to reliably check status updates in unit tests.
-        updateStatus(ThingStatus.UNKNOWN);
-
-        // Example for background initialization:
-        scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
-            // when done do:
-            if (thingReachable) {
-                updateStatus(ThingStatus.ONLINE);
-            } else {
-                updateStatus(ThingStatus.OFFLINE);
-            }
-        });
-
-        // logger.debug("Finished initializing!");
-
-        // Note: When initialization can NOT be done set the status with more details for further
-        // analysis. See also class ThingStatusDetail for all available status details.
-        // Add a description to give user information to understand why thing does not work as expected. E.g.
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-        // "Can not access device as username and/or password are invalid");
+        return bridge == null ? null : (HelvarBridgeHandler) bridge.getHandler();
     }
+
+    protected void sendCommand(HelvarCommand command) {
+        HelvarBridgeHandler bridgeHandler = getBridgeHandler();
+
+        if (bridgeHandler == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_MISSING_ERROR, "No router associated");
+            thingOfflineNotify();
+        } else {
+            bridgeHandler.sendCommand(command);
+        }
+    }
+
 }

@@ -27,6 +27,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
+import org.openhab.binding.helvar.internal.handler.DimmerHandler;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -41,7 +42,7 @@ public class HelvarHandlerFactory extends BaseThingHandlerFactory {
 
     // Other types that can be initiated but not discovered
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.unmodifiableSet(
-            Stream.of(THING_TYPE_ROUTER, THING_TYPE_ROUTER).collect(Collectors.toSet()));
+            Stream.of(THING_TYPE_ROUTER, THING_TYPE_DIMMER).collect(Collectors.toSet()));
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -55,6 +56,9 @@ public class HelvarHandlerFactory extends BaseThingHandlerFactory {
         if (thingTypeUID.equals(THING_TYPE_ROUTER)) {
             HelvarBridgeHandler bridgeHandler = new HelvarBridgeHandler((Bridge) thing);
             return bridgeHandler;
+        } else if (thingTypeUID.equals(THING_TYPE_DIMMER)){
+            DimmerHandler dimmerHandler = new DimmerHandler(thing);
+            return dimmerHandler;
         }
 
         return null;

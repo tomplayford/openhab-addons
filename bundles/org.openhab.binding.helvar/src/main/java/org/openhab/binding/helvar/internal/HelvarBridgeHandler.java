@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.HOST;
 import static org.openhab.binding.helvar.internal.HelvarCommandType.QUERY_CLUSTERS;
+import static org.openhab.binding.helvar.internal.HelvarCommandType.QUERY_DEVICE_TYPES_AND_ADDRESSES;
 
 public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
@@ -61,6 +62,10 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.DUTY_CYCLE);
         disconnect();
         connect();
+    }
+
+    public HelvarAddress getAddress(){
+        return new HelvarAddress(this.helvarBridgeConfig.getClusterId(), this.helvarBridgeConfig.getDriverId(), null, null);
     }
 
     private void parseUpdates() {
@@ -227,9 +232,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         messageSender = new Thread(this::sendCommandsThread, "Helvar sender");
         messageSender.start();
 
-        logger.debug("Starting keepAlive job with interval {}", DEFAULT_HEARTBEAT_MINUTES);
-        keepAlive = scheduler.scheduleWithFixedDelay(this::sendKeepAlive, DEFAULT_HEARTBEAT_MINUTES, DEFAULT_HEARTBEAT_MINUTES,
-                TimeUnit.MINUTES);
+//        logger.debug("Starting keepAlive job with interval {}", DEFAULT_HEARTBEAT_MINUTES);
+//        keepAlive = scheduler.scheduleWithFixedDelay(this::sendKeepAlive, DEFAULT_HEARTBEAT_MINUTES, DEFAULT_HEARTBEAT_MINUTES,
+//                TimeUnit.MINUTES);
     }
 
     private void sendKeepAlive() {
@@ -244,6 +249,8 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     private void sendTestCommand() {
         this.sendCommand(new HelvarCommand(QUERY_CLUSTERS));
+        this.sendCommand(new HelvarCommand(QUERY_DEVICE_TYPES_AND_ADDRESSES, new HelvarAddress(1,1,1, null)));
+
     }
 
     void sendCommand(HelvarCommand command) {

@@ -27,6 +27,16 @@
 				Default is 50000.</description>
 				<default>50000</default>
 			</parameter>
+			<parameter name="clusterId" type="integer" required="false" min="0" max="253">
+				<label>Cluster</label>
+				<description>Router Cluster ID. It seems that this should be set to 0 if no clusters set.</description>
+				<default>0s</default>
+			</parameter>
+			<parameter name="routerId" type="integer" required="false" min="1" max="254">
+				<label>Router</label>
+				<description>Router Router ID</description>
+				<default>1</default>
+			</parameter>
 
 		</config-description>
 	</bridge-type>
@@ -37,23 +47,31 @@
 		</supported-bridge-type-refs>
 
 		<label>Dimmer</label>
-		<description>Controls dimmable loads</description>
+		<description>Controls dimmable things, probably lights.</description>
+
+		<channels>
+			<channel id="lightlevel" typeId="lightDimmer"/>
+		</channels>
 
 		<config-description>
-			<parameter name="integrationId" type="integer" required="true">
-				<label>Integration ID</label>
-				<description>Address of dimmer in the Lutron lighting system</description>
+			<parameter name="subnetId" type="integer" required="true" min="1" max="4">
+				<label>Subnet</label>
+				<description>Subnet ID of the dimmer under the assigned router.</description>
 			</parameter>
-			<parameter name="fadeInTime" type="decimal">
-				<label>Fade In Time</label>
-				<description>Fade time in seconds when turning on the light</description>
-			</parameter>
-			<parameter name="fadeOutTime" type="decimal">
-				<label>Fade Out Time</label>
-				<description>Fade time in seconds when turning off the light</description>
+			<parameter name="deviceId" type="integer" required="true" min="1" max="255">
+				<label>Device</label>
+				<description>Device ID of the dimmer under the assigned router.</description>
 			</parameter>
 		</config-description>
 	</thing-type>
+
+	<channel-type id="lightDimmer">
+		<item-type>Dimmer</item-type>
+		<label>Light Level</label>
+		<description>Increase/decrease the light level</description>
+		<category>DimmableLight</category>
+		<state min="0" max="100" pattern="%d %%"/>
+	</channel-type>
 
 
 </thing:thing-descriptions>

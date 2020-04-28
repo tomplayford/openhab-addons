@@ -1,18 +1,21 @@
 package org.openhab.binding.helvar.internal;
 
+import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.COMMAND;
+import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.VERSION;
+
 public class HelvarCommand {
 
     private final HelvarMessageType messageType;
     private final HelvarCommandType commandType;
 
-//    private final int integrationId;
+    //    private final int integrationId;
     private final Object[] parameters;
 
     private final HelvarMessageType defaultMessageType = HelvarMessageType.COMMAND;
     private final String defaultHelvarNetVersion = "1";
     private final String defaultHelvarTerminationChar = "#";
 
-    public HelvarCommand(HelvarCommandType commandType, Object... parameters) {
+    public HelvarCommand(HelvarCommandType commandType, HelvarCommandParameter... parameters) {
 
         this.messageType = defaultMessageType;
         this.commandType = commandType;
@@ -32,11 +35,34 @@ public class HelvarCommand {
         return this.parameters;
     }
 
+    private HelvarCommandParameter[] buildBaseParameters() {
+
+        HelvarCommandParameter[] parameters = {
+                new HelvarCommandParameter(VERSION, defaultHelvarNetVersion),
+                new HelvarCommandParameter(COMMAND, Integer.toString(commandType.getCommandId())),
+        };
+
+        return parameters;
+    }
+
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder().append(this.messageType).append(this.buildVersionStatement()).
-                append(",").append(this.buildCommandStatement());
 
+        HelvarCommandParameter[] baseParameters = buildBaseParameters();
+
+        StringBuilder builder = new StringBuilder().append(this.messageType);
+
+        boolean first = true;
+        for (HelvarCommandParameter parameter : baseParameters) {
+
+            if (first) {
+                builder.append(parameter);
+                first = false;
+                continue;
+            }
+
+            builder.append(',').append(parameter);
+        }
 
         if (parameters != null) {
             for (Object parameter : parameters) {
@@ -46,15 +72,6 @@ public class HelvarCommand {
 
         return builder.append(this.defaultHelvarTerminationChar).toString();
     }
-
-    private String buildVersionStatement() {
-        return "V:" + defaultHelvarNetVersion;
-    }
-
-    private String buildCommandStatement() {
-        return "C:" + Integer.toString(commandType.getCommandId());
-    }
-
 }
 
 
