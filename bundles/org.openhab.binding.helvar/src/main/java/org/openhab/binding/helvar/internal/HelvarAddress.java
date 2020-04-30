@@ -43,7 +43,19 @@ public class HelvarAddress extends HelvarCommandParameter {
     public String toString() {
         return this.commandParameterType + this.buildCommandArgument();
     }
-    
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof HelvarAddress) {
+            return ((HelvarAddress) other).clusterId.equals(this.clusterId) &&
+                    ((HelvarAddress) other).routerId.equals(this.routerId) &&
+                    ((HelvarAddress) other).subnetId.equals(this.subnetId) &&
+                    ((HelvarAddress) other).deviceId.equals(this.deviceId);
+        }
+        return false;
+
+
+    }
     public Integer getSubnetId(){
         return this.subnetId;
     }

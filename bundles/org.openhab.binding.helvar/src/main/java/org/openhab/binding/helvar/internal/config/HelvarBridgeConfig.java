@@ -14,7 +14,7 @@ public class HelvarBridgeConfig {
     private @NonNullByDefault({}) String ipAddress;
     private int port = 50000;
     private int clusterId = 1;
-    private int driverId = 1;
+    private int routerId = 1;
 
     public String getIpAddress() {
         return ipAddress;
@@ -41,11 +41,11 @@ public class HelvarBridgeConfig {
         this.clusterId = clusterId;
     }
 
-    public int getDriverId() {
-        return driverId;
+    public int getRouterId() {
+        return routerId;
     }
 
-    public void setDriverId(int driverId) {
-        this.driverId = driverId;
+    public void setRouterId(int routerId) {
+        this.routerId = routerId;
     }
 }

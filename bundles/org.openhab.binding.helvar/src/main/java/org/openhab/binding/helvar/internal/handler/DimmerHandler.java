@@ -50,6 +50,11 @@ public class DimmerHandler extends HelvarHandler {
     }
 
     @Override
+    public void handleUpdate(HelvarCommand helvarCommand) {
+        // do nothing
+    }
+
+    @Override
     public void initialize() {
         this.config = getThing().getConfiguration().as(DimmerConfig.class);
         if (!getAddress().isValidForDevice()) {
@@ -61,12 +66,16 @@ public class DimmerHandler extends HelvarHandler {
         initDeviceState();
     }
 
-
-
-    @Override
-    public void handleUpdate(HelvarCommandType type, String... parameters) {
-
-    }
+//    public void handleRouterCommand(HelvarCommand command) {
+//
+//        logger.debug("Thing {} does not support HelvarCommandType {}",this.toString(), command.getCommandType());
+//
+//        switch (command.getCommandType()) {
+//            case QUERY_DEVICE_LOAD_LEVEL:
+//            case QUERY_DEVICE_STATE:
+//                break;
+//        }
+//    }
 
     @Override
     protected void initDeviceState() {
@@ -75,9 +84,10 @@ public class DimmerHandler extends HelvarHandler {
         if (bridge == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "No router configured");
         } else if (bridge.getStatus() == ThingStatus.ONLINE) {
-            //updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Awaiting initial response");
-            updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
-            //queryOutput(ACTION_ZONELEVEL); // handleUpdate() will set thing status to online when response arrives
+            updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Awaiting initial response");
+//            updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
+            queryDeviceState();
+            queryDeviceLoad();
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
         }

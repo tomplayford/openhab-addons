@@ -1,5 +1,6 @@
 package org.openhab.binding.helvar.internal;
 
+import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.COMMAND;
 import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.VERSION;
 
@@ -7,6 +8,10 @@ public class HelvarCommand {
 
     private final HelvarMessageType messageType;
     private final HelvarCommandType commandType;
+
+    private HelvarAddress address;
+
+    private String queryResponse;
 
     //    private final int integrationId;
     private final Object[] parameters;
@@ -19,20 +24,50 @@ public class HelvarCommand {
 
         this.messageType = defaultMessageType;
         this.commandType = commandType;
-//        this.integrationId = integrationId;
         this.parameters = parameters;
+    }
+
+    public HelvarCommand(HelvarMessageType messageType, HelvarCommandType commandType, HelvarCommandParameter... parameters) {
+        this.messageType = messageType;
+        this.commandType = commandType;
+        this.parameters = parameters;
+    }
+
+    public HelvarCommand(HelvarMessageType messageType, HelvarCommandType commandType, HelvarAddress helvarAddress, HelvarCommandParameter... parameters) {
+        this.messageType = messageType;
+        this.commandType = commandType;
+        this.parameters = parameters;
+        this.address = helvarAddress;
+    }
+
+    public HelvarCommand(HelvarMessageType messageType, HelvarCommandType commandType, HelvarAddress helvarAddress,
+                         String queryResponse, HelvarCommandParameter... parameters) {
+        this.messageType = messageType;
+        this.commandType = commandType;
+        this.parameters = parameters;
+        this.address = helvarAddress;
+        this.queryResponse = queryResponse;
+
     }
 
     public HelvarCommandType getCommandType() {
         return this.commandType;
     }
 
-//    public int getIntegrationId() {
-//        return this.integrationId;
-//    }
-
     public Object[] getParameters() {
         return this.parameters;
+    }
+
+    public HelvarAddress getAddress() {
+        return this.address;
+    }
+
+    public String getQueryResponse() {
+        return this.queryResponse;
+    }
+
+    public HelvarMessageType getMessageType() {
+        return this.messageType;
     }
 
     private HelvarCommandParameter[] buildBaseParameters() {
@@ -45,8 +80,18 @@ public class HelvarCommand {
         return parameters;
     }
 
+    /**
+     * Builds the command string for transmission to a Helvar Router.
+     *
+     * @return The raw helvar command string
+     */
     @Override
     public String toString() {
+
+        if (this.messageType != HelvarMessageType.COMMAND) {
+           // Only COMMAND messages can be sent.
+           return "";
+        }
 
         HelvarCommandParameter[] baseParameters = buildBaseParameters();
 
@@ -70,6 +115,10 @@ public class HelvarCommand {
             }
         }
 
+        if (!isNull(this.address)) {
+            builder.append(',').append(address);
+
+        }
         return builder.append(this.defaultHelvarTerminationChar).toString();
     }
 }

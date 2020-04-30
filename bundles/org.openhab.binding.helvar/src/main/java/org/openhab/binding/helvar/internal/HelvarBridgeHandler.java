@@ -8,6 +8,8 @@ import org.eclipse.smarthome.core.types.Command;
 import org.openhab.binding.helvar.internal.config.HelvarBridgeConfig;
 import org.openhab.binding.helvar.internal.net.TelnetSession;
 import org.openhab.binding.helvar.internal.net.TelnetSessionListener;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandParser;
+import org.openhab.binding.helvar.internal.parser.UnsupportedCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +21,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.HOST;
-import static org.openhab.binding.helvar.internal.HelvarCommandType.QUERY_CLUSTERS;
-import static org.openhab.binding.helvar.internal.HelvarCommandType.QUERY_DEVICE_TYPES_AND_ADDRESSES;
+import static org.openhab.binding.helvar.internal.HelvarCommandType.*;
 
 public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
@@ -65,10 +67,14 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
     }
 
     public HelvarAddress getAddress(){
-        return new HelvarAddress(this.helvarBridgeConfig.getClusterId(), this.helvarBridgeConfig.getDriverId(), null, null);
+        return new HelvarAddress(this.helvarBridgeConfig.getClusterId(), this.helvarBridgeConfig.getRouterId(), null, null);
     }
 
-    private void parseUpdates() {
+
+    /**
+     * Parse messages coming in from router, and do sensible things with them.
+     */
+    private void handleMessagesFromRouter() {
 
         String paramString;
         String scrubbedLine;
@@ -81,6 +87,102 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             }
 
             logger.debug("Received message {}", line);
+
+            HelvarCommandParser commandParser = new HelvarCommandParser();
+
+            HelvarCommand helvarCommand;
+            try {
+                helvarCommand = commandParser.parseCommand(line);
+            } catch (UnsupportedCommand e) {
+                logger.debug("Received an unsupported command: {}", e.getMessage());
+                continue; // next line.
+            }
+
+            switch (helvarCommand.getMessageType()) {
+                case COMMAND:
+                    logger.warn("Received a COMMAND from Router @{}.{} this shouldn't happen: {}",
+                            this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(),
+                            line);
+                    break;
+                case INTERNAL_COMMAND:
+                    logger.debug("Received an INTERNAL_COMMAND from Router @{}.{} not " +
+                                    "sure what to do with these, ignoring: {}",
+                            this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(),
+                            line);
+                    break;
+                case ERROR:
+                    logger.warn("Received a ERROR from Router @{}.{}: {}",
+                            this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(),
+                            line);
+                    break;
+                case REPLY:
+                    logger.trace("Received a REPLY from Router @{}.{}: {}",
+                            this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(),
+                            line);
+                    handleReplyCommand(helvarCommand);
+                    break;
+            }
+        }
+    }
+
+    private void handleReplyCommand(HelvarCommand command) {
+
+        switch (command.getCommandType()) {
+            case QUERY_DEVICE_LOAD_LEVEL:
+            case QUERY_DEVICE_STATE:
+                // Expecting full address and a value
+
+                HelvarHandler handler = findThingHandler(command.getAddress());
+
+                if (isNull(handler)) {
+                    logger.trace("Received a '{}' REPLY from Router @{}.{} with address {}. " +
+                            "Couldn't find Thing with that address. Ignoring message.", command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(), command.getAddress());
+                    return;
+                }
+
+                handler.handleRouterCommand(command);
+
+                break;
+            case QUERY_CLUSTERS:
+
+                break;
+
+            case QUERY_DEVICE_TYPES_AND_ADDRESSES:
+                break;
+
+            case DIRECT_LEVEL_DEVICE:
+                break;
+        }
+
+    }
+
+    private HelvarHandler findThingHandler(HelvarAddress address) {
+
+        // TODO: find a better way of looking up a Thing based on it's address. This seems pretty horrid.
+
+        for (Thing thing : getThing().getThings()) {
+            if (thing.getHandler() instanceof HelvarHandler) {
+                HelvarHandler handler = (HelvarHandler) thing.getHandler();
+
+                try {
+                    if (handler != null && handler.getAddress().equals(address)) {
+                        return handler;
+                    }
+                } catch (IllegalStateException e) {
+                    logger.trace("Handler for id {} not initialized", address);
+                }
+            }
+        }
+
+        return null;
+
+    }
+
 
 //            // System is alive, cancel reconnect task.
 //            if (this.keepAliveReconnect != null) {
@@ -95,17 +197,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 //                continue;
 //
 //            } else {
-//
-//                // We have a good response message
-//                LutronCommandType type = LutronCommandType.valueOf(matcher.group(1));
-//
-//                if (type == LutronCommandType.SYSTEM) {
-//                    // SYSTEM messages are assumed to be a response to the SYSTEM_DBEXPORTDATETIME
-//                    // query. The response returns the last time the device database was updated.
-//                    setDbUpdateDate(matcher.group(2), matcher.group(3));
-//
-//                    continue;
-//                }
 //
 //                Integer integrationId;
 //
@@ -132,9 +223,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 //                    logger.debug("No thing configured for integration ID {}", integrationId);
 //                }
 //            }
-        }
-
-    }
+//        }
+//
+//    }
 
     private synchronized void connect() {
 
@@ -147,8 +238,8 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         this.session.addListener(new TelnetSessionListener() {
             @Override
             public void inputAvailable() {
-                logger.trace("Input Available called");
-                parseUpdates();
+//                logger.trace("Input Available called");
+                handleMessagesFromRouter();
             }
 
             @Override
@@ -250,7 +341,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
     private void sendTestCommand() {
         this.sendCommand(new HelvarCommand(QUERY_CLUSTERS));
         this.sendCommand(new HelvarCommand(QUERY_DEVICE_TYPES_AND_ADDRESSES, new HelvarAddress(1,1,1, null)));
-
     }
 
     void sendCommand(HelvarCommand command) {
@@ -320,8 +410,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     @Override
     public void thingUpdated(Thing thing) {
-
-        // Not sure if and when this is called?!
 
         logger.debug("Thing updated called");
 
