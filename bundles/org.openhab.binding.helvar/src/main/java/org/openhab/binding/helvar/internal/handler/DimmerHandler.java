@@ -1,3 +1,15 @@
+/**
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
 package org.openhab.binding.helvar.internal.handler;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -9,7 +21,6 @@ import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.helvar.internal.*;
 import org.openhab.binding.helvar.internal.config.DimmerConfig;
-import org.openhab.binding.helvar.internal.config.HelvarBridgeConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +51,13 @@ public class DimmerHandler extends HelvarHandler {
 
     @Override
     public HelvarAddress getAddress() {
-        if (this.config == null || this.getBridgeHandler() == null) {
+
+        @Nullable HelvarBridgeHandler bridgeHandler = this.getBridgeHandler();
+
+        if (this.config == null || bridgeHandler == null) {
             throw new IllegalStateException("Handler not initialized correctly");
         }
-        HelvarAddress address = this.getBridgeHandler().getAddress();
+        HelvarAddress address = bridgeHandler.getAddress();
         address.setDeviceId(this.config.getDeviceId());
         address.setSubnetId(this.config.getSubnetId());
         return address;

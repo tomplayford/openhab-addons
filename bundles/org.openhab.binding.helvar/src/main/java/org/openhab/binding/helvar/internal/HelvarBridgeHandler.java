@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 package org.openhab.binding.helvar.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -25,6 +38,12 @@ import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.HOST;
 import static org.openhab.binding.helvar.internal.HelvarCommandType.*;
 
+
+/**
+ * The {@link HelvarBridgeHandler} handles the connection to Helvar Routers.
+ *
+ * @author Tom Playford - Initial contribution - heavily based on Lutron IPBridgeHandler.
+ */
 public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
 
@@ -35,7 +54,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     private final Logger logger = LoggerFactory.getLogger(HelvarBridgeHandler.class);
 
-    private @NonNullByDefault({}) HelvarBridge helvarBridge = null;
     private @NonNullByDefault({}) HelvarBridgeConfig helvarBridgeConfig = null;
 
     private TelnetSession session;
@@ -159,6 +177,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
             case DIRECT_LEVEL_DEVICE:
                 break;
+
+            case QUERY_ROUTER_TIME:
+                break;
         }
 
     }
@@ -272,7 +293,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
                     reconnect();
 
-                    // reconnect() will start a new thread; terminate this one
                     break;
                 }
                 if (DEFAULT_SEND_DELAY_SECONDS > 0) {

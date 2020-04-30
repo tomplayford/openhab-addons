@@ -19,6 +19,9 @@ import java.io.IOException;
 /**
  * Listener for telnet session events.
  *
+ * @author Unknown - Initial contribution
+ * @author Tom Playford - Adopted for Helvar Handler
+ *
  */
 @NonNullByDefault
 public interface TelnetSessionListener {

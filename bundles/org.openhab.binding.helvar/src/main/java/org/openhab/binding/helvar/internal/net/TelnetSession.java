@@ -49,13 +49,11 @@ public class TelnetSession implements Closeable {
 
     private final Logger logger = LoggerFactory.getLogger(TelnetSession.class);
 
-    private int defaultTimeout = 600000; // 10 minutes.
-
     private TelnetClient telnetClient;
     private @Nullable BufferedReader reader;
     private @Nullable PrintStream outstream;
 
-    private CharBuffer charBuffer;
+    private final CharBuffer charBuffer;
     private List<TelnetSessionListener> listeners = new ArrayList<>();
 
     private @Nullable TelnetOptionHandler suppressGAOptionHandler;
@@ -109,6 +107,8 @@ public class TelnetSession implements Closeable {
         synchronized (this.charBuffer) {
             logger.trace("TelnetSession open called");
             try {
+                // 10 minutes.
+                int defaultTimeout = 600000;
                 telnetClient.setDefaultTimeout(defaultTimeout);
                 telnetClient.connect(host, port);
                 telnetClient.setKeepAlive(true);

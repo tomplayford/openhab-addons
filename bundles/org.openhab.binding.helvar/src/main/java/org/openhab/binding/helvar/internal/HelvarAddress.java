@@ -1,9 +1,40 @@
-package org.openhab.binding.helvar.internal;
+/**
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
 
+package org.openhab.binding.helvar.internal;
 
 import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.ADDRESS;
 
+/**
+ * Represents a Helvar address.
+ *
+ * Address format is @c.r.s.d
+ *   c - cluster: 0-253
+ *   r - router: 1-254
+ *   s - subnet: 1-4
+ *   d - device: 1-255
+ *
+ * incomplete addresses are possible, but must include at least cluster and router
+ *
+ *   @0.1
+ *
+ *   cluster: 0
+ *   router: 1
+ *
+ *
+ * @author Tom Playford - Initial contribution
+ */
 public class HelvarAddress extends HelvarCommandParameter {
 
     private Integer clusterId;

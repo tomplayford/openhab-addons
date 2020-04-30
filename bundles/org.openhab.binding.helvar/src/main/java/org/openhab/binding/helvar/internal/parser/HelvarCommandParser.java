@@ -1,17 +1,25 @@
-package org.openhab.binding.helvar.internal.parser;
+/**
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
 
+package org.openhab.binding.helvar.internal.parser;
 
 import org.openhab.binding.helvar.internal.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.lang.String.format;
 
 
 /**
@@ -20,6 +28,9 @@ import static java.lang.String.format;
  * Takes a String and returns a HelvarCommand.
  *
  * Raises a CommandNotSupported exception if it receives a command that it does not currently support.
+ *
+ * @author Tom Playford - Initial Contribution
+ *
  */
 public class HelvarCommandParser {
 
@@ -28,11 +39,8 @@ public class HelvarCommandParser {
     private final Pattern RESPONSE_REGEX = Pattern
             .compile("^(?<type>[<>?!])V:(?<version>\\d),C:(?<command>\\d+),?(?<params>[^=@#]+)?(?<address>@[^=#]+)?(=(?<result>[^=#]+))?#?$");
 
-    private final Pattern PARAM_REGEX = Pattern.compile("(?:(?<command>[A-Z]:\\d+)+)");
 
     public HelvarCommand parseCommand(String rawCommand) throws UnsupportedCommand {
-
-        //throw new UnsupportedCommand("Unsupported Command type");
 
         Matcher matcher = RESPONSE_REGEX.matcher(rawCommand);
         boolean responseMatched = matcher.find();
