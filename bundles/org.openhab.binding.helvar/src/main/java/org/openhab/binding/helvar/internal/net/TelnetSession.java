@@ -49,7 +49,7 @@ public class TelnetSession implements Closeable {
 
     private final Logger logger = LoggerFactory.getLogger(TelnetSession.class);
 
-    private int defaultTimeout = 10000; // 10 seconds
+    private int defaultTimeout = 600000; // 10 minutes.
 
     private TelnetClient telnetClient;
     private @Nullable BufferedReader reader;

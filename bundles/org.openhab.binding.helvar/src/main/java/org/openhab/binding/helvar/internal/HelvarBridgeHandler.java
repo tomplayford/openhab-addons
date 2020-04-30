@@ -28,10 +28,10 @@ import static org.openhab.binding.helvar.internal.HelvarCommandType.*;
 public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
 
-    private static final int DEFAULT_RECONNECT_MINUTES = 5;
+    private static final int DEFAULT_RECONNECT_SECONDS = 5;
     private static final int DEFAULT_HEARTBEAT_MINUTES = 5;
     private static final int DEFAULT_SEND_DELAY_SECONDS = 0;
-    private static final long KEEPALIVE_TIMEOUT_SECONDS = 30;
+    private static final long KEEPALIVE_TIMEOUT_SECONDS = 10;
 
     private final Logger logger = LoggerFactory.getLogger(HelvarBridgeHandler.class);
 
@@ -76,9 +76,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
      */
     private void handleMessagesFromRouter() {
 
-        String paramString;
-        String scrubbedLine;
-
         for (String line : this.session.readLines()) {
             if (line.trim().equals("")) {
                 logger.trace("Received a blank line, ignoring");
@@ -87,6 +84,11 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             }
 
             logger.debug("Received message {}", line);
+
+            // System is alive, cancel reconnect task.
+            if (this.keepAliveReconnect != null) {
+                this.keepAliveReconnect.cancel(true);
+            }
 
             HelvarCommandParser commandParser = new HelvarCommandParser();
 
@@ -183,50 +185,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
-
-//            // System is alive, cancel reconnect task.
-//            if (this.keepAliveReconnect != null) {
-//                this.keepAliveReconnect.cancel(true);
-//            }
-
-//            Matcher matcher = RESPONSE_REGEX.matcher(line);
-//            boolean responseMatched = matcher.find();
-//
-//            if (!responseMatched) {
-//                logger.debug("Ignoring message {}", line);
-//                continue;
-//
-//            } else {
-//
-//                Integer integrationId;
-//
-//                try {
-//                    integrationId = Integer.valueOf(matcher.group(2));
-//                } catch (NumberFormatException e1) {
-//                    logger.warn("Integer conversion error parsing update: {}", line);
-//                    continue;
-//                }
-//                paramString = matcher.group(3);
-//
-//                // Now dispatch update to the proper thing handler
-//                LutronHandler handler = findThingHandler(integrationId);
-//
-//                if (handler != null) {
-//                    try {
-//                        handler.handleUpdate(type, paramString.split(","));
-//                    } catch (NumberFormatException e) {
-//                        logger.warn("Number format exception parsing update: {}", line);
-//                    } catch (RuntimeException e) {
-//                        logger.warn("Runtime exception while processing update: {}", line, e);
-//                    }
-//                } else {
-//                    logger.debug("No thing configured for integration ID {}", integrationId);
-//                }
-//            }
-//        }
-//
-//    }
-
     private synchronized void connect() {
 
         if (this.session.isConnected()) {
@@ -238,13 +196,15 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         this.session.addListener(new TelnetSessionListener() {
             @Override
             public void inputAvailable() {
-//                logger.trace("Input Available called");
                 handleMessagesFromRouter();
             }
 
             @Override
             public void error(IOException exception) {
+
                 logger.debug("IO error {}", exception.getMessage());
+//                disconnect();
+//                scheduleConnectRetry(DEFAULT_RECONNECT_SECONDS);
             }
         });
 
@@ -279,7 +239,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
             logger.error("Communication error connecting to router at {}. {}", this.helvarBridgeConfig.getIpAddress(), e.getMessage());
             disconnect();
-//            scheduleConnectRetry(reconnectInterval); // Possibly a temporary problem. Try again later.
+            scheduleConnectRetry(DEFAULT_RECONNECT_SECONDS); // Possibly a temporary problem. Try again later.
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -288,6 +248,11 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             disconnect();
         }
 
+    }
+
+    private void scheduleConnectRetry(long waitSeconds) {
+        logger.debug("Scheduling connection retry in {} minutes", waitSeconds);
+        connectRetryJob = scheduler.schedule(this::connect, waitSeconds, TimeUnit.SECONDS);
     }
 
     private void sendCommandsThread() {
@@ -323,9 +288,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         messageSender = new Thread(this::sendCommandsThread, "Helvar sender");
         messageSender.start();
 
-//        logger.debug("Starting keepAlive job with interval {}", DEFAULT_HEARTBEAT_MINUTES);
-//        keepAlive = scheduler.scheduleWithFixedDelay(this::sendKeepAlive, DEFAULT_HEARTBEAT_MINUTES, DEFAULT_HEARTBEAT_MINUTES,
-//                TimeUnit.MINUTES);
+        logger.debug("Starting keepAlive job with interval {}", DEFAULT_HEARTBEAT_MINUTES);
+        keepAlive = scheduler.scheduleWithFixedDelay(this::sendKeepAlive, DEFAULT_HEARTBEAT_MINUTES, DEFAULT_HEARTBEAT_MINUTES,
+                TimeUnit.MINUTES);
     }
 
     private void sendKeepAlive() {
@@ -334,13 +299,13 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         // Reconnect if no response is received within 30 seconds.
         keepAliveReconnect = scheduler.schedule(this::reconnect, KEEPALIVE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-//        logger.trace("Sending keepalive query");
-//        sendCommand(new LutronCommand(LutronOperation.QUERY, LutronCommandType.SYSTEM, -1, SYSTEM_DBEXPORTDATETIME));
+        logger.trace("Sending keepalive query");
+        sendCommand(new HelvarCommand(HelvarCommandType.QUERY_ROUTER_TIME));
     }
 
     private void sendTestCommand() {
-        this.sendCommand(new HelvarCommand(QUERY_CLUSTERS));
-        this.sendCommand(new HelvarCommand(QUERY_DEVICE_TYPES_AND_ADDRESSES, new HelvarAddress(1,1,1, null)));
+        this.sendCommand(new HelvarCommand(HelvarCommandType.QUERY_ROUTER_TIME));
+        this.sendCommand(new HelvarCommand(QUERY_DEVICE_TYPES_AND_ADDRESSES, new HelvarAddress(0,1,1, null)));
     }
 
     void sendCommand(HelvarCommand command) {

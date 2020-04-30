@@ -8,6 +8,7 @@ public enum HelvarCommandType {
     QUERY_DEVICE_TYPES_AND_ADDRESSES(100, "Query Device Types and Addresses"),
     QUERY_DEVICE_STATE(110, "Query Device State"),
     QUERY_DEVICE_LOAD_LEVEL(152, "Query Device Load Level"),
+    QUERY_ROUTER_TIME(185, "Query Router Time"),
 
     // Command
     DIRECT_LEVEL_DEVICE(14,"Direct Level, Device");
