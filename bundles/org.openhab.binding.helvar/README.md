@@ -51,6 +51,11 @@ _Note that it is planned to generate some part of this based on the XML files wi
 
 _Provide a full usage example based on textual configuration files (*.things, *.items, *.sitemap)._
 
-## Any custom content here!
+## Important things
 
-_Feel free to add additional sections for whatever you think should also be mentioned about your binding!_
+Helvar is a registered trademark of Helvar Oy Ab, Finland - and Helvar Ltd., UK.
+
+This work, the authors, and the OpenHab project have no affiliation with Helvar. 
+
+This work is based on the HelvarNet format published by Helvar Ltd, UK.  
+
