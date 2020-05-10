@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.helvar.internal.config;
 
-import org.openhab.binding.helvar.internal.HelvarAddress;
-
 /**
  * Configuration settings for a {@link org.openhab.binding.helvar.internal.handler.GroupHandler}.
  *

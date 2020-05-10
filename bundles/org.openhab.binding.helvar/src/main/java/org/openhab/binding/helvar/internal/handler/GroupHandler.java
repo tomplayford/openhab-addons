@@ -15,26 +15,20 @@ package org.openhab.binding.helvar.internal.handler;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
-import org.eclipse.smarthome.core.library.types.OnOffType;
-import org.eclipse.smarthome.core.library.types.PercentType;
-import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.types.Command;
-import org.openhab.binding.helvar.internal.HelvarCommand;
+import org.openhab.binding.helvar.internal.parser.HelvarCommand;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.helvar.internal.HelvarCommandParameter;
-import org.openhab.binding.helvar.internal.HelvarCommandType;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandParameter;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandType;
 import org.openhab.binding.helvar.internal.config.GroupConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
-
 import static java.lang.StrictMath.floor;
-import static org.openhab.binding.helvar.internal.HelvarBindingConstants.CHANNEL_LIGHTLEVEL;
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.SCENE_SELECTION;
-import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.*;
-import static org.openhab.binding.helvar.internal.HelvarCommandType.QUERY_LAST_SCENE_IN_BLOCK;
+import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType.*;
+import static org.openhab.binding.helvar.internal.parser.HelvarCommandType.QUERY_LAST_SCENE_IN_BLOCK;
 
 /**
  * Handler for Helvar Groups

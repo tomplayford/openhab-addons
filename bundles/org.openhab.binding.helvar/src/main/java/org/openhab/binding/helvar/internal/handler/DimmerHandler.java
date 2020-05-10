@@ -19,13 +19,16 @@ import org.eclipse.smarthome.core.library.types.PercentType;
 import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.helvar.internal.*;
 import org.openhab.binding.helvar.internal.config.DimmerConfig;
+import org.openhab.binding.helvar.internal.parser.HelvarAddress;
+import org.openhab.binding.helvar.internal.parser.HelvarCommand;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandParameter;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.CHANNEL_LIGHTLEVEL;
-import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.*;
+import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType.*;
 
 /**
  * Handler for devices on the Helvar networks that behave like simple dimmers.

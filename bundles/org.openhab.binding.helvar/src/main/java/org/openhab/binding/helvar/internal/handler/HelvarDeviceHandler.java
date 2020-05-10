@@ -17,9 +17,9 @@ import static org.openhab.binding.helvar.internal.HelvarBindingConstants.*;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.library.types.PercentType;
 import org.eclipse.smarthome.core.thing.*;
-import org.openhab.binding.helvar.internal.HelvarAddress;
-import org.openhab.binding.helvar.internal.HelvarCommand;
-import org.openhab.binding.helvar.internal.HelvarCommandType;
+import org.openhab.binding.helvar.internal.parser.HelvarAddress;
+import org.openhab.binding.helvar.internal.parser.HelvarCommand;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

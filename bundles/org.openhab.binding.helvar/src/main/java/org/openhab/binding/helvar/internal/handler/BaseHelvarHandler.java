@@ -4,7 +4,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
-import org.openhab.binding.helvar.internal.HelvarCommand;
+import org.openhab.binding.helvar.internal.parser.HelvarCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

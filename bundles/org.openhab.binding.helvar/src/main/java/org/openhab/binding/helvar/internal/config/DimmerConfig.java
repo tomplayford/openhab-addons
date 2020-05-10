@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.helvar.internal.config;
 
-import org.openhab.binding.helvar.internal.HelvarAddress;
+import org.openhab.binding.helvar.internal.parser.HelvarAddress;
 
 /**
  * Configuration settings for a {@link org.openhab.binding.helvar.internal.handler.DimmerHandler}.

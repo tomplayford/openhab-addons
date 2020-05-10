@@ -18,9 +18,9 @@ import org.eclipse.smarthome.config.core.status.ConfigStatusMessage;
 import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.thing.binding.ConfigStatusBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
-import org.openhab.binding.helvar.internal.HelvarAddress;
-import org.openhab.binding.helvar.internal.HelvarCommand;
-import org.openhab.binding.helvar.internal.HelvarCommandType;
+import org.openhab.binding.helvar.internal.parser.HelvarAddress;
+import org.openhab.binding.helvar.internal.parser.HelvarCommand;
+import org.openhab.binding.helvar.internal.parser.HelvarCommandType;
 import org.openhab.binding.helvar.internal.config.HelvarBridgeConfig;
 import org.openhab.binding.helvar.internal.net.TelnetSession;
 import org.openhab.binding.helvar.internal.net.TelnetSessionListener;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.HOST;
-import static org.openhab.binding.helvar.internal.HelvarCommandType.*;
+import static org.openhab.binding.helvar.internal.parser.HelvarCommandType.*;
 
 
 /**

@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.helvar.internal;
+package org.openhab.binding.helvar.internal.parser;
 
 import java.util.Arrays;
 

@@ -11,7 +11,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.helvar.internal;
+package org.openhab.binding.helvar.internal.parser;
+
+import org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType;
 
 /**
  * Simple Helvar command parameter
