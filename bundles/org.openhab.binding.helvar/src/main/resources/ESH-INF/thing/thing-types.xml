@@ -65,10 +65,74 @@
 		</config-description>
 	</thing-type>
 
+	<thing-type id="group">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="router"/>
+		</supported-bridge-type-refs>
+
+		<label>Group</label>
+		<description>A group of things on the Helvar device. Groups support scenes, have a name and map directly to
+			DALI groups on the DALI bus.</description>
+
+		<channels>
+			<channel id="scene" typeId="sceneSelector"/>
+			<channel id="sceneLightLevel" typeId="sceneLightDimmer"/>
+		</channels>
+
+		<config-description>
+			<parameter name="groupId" type="integer" required="true" min="1" max="16383">
+				<label>Group Number</label>
+				<description>Group ID of the group.</description>
+			</parameter>
+			<parameter name="blockId" type="integer" required="true" min="1" max="8">
+				<label>Scene Block</label>
+				<description>This handler only supports selecting scenes on one Block. Select the Block ID here</description>
+			</parameter>
+			<parameter name="name" type="text" required="false">
+				<label>Name</label>
+				<description>Descriptive name of the Group.</description>
+			</parameter>
+		</config-description>
+	</thing-type>
+
 	<channel-type id="lightDimmer">
 		<item-type>Dimmer</item-type>
 		<label>Light Level</label>
-		<description>Increase/decrease the light level</description>
+		<description>Increase/decrease the light level.</description>
+		<state min="0" max="100" pattern="%d %%"/>
+	</channel-type>
+
+	<channel-type id="sceneSelector">
+		<item-type>Number</item-type>
+		<label>Scene</label>
+		<description>Select a scene.</description>
+		<state>
+			<options>
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+				<option value="9">9</option>
+				<option value="10">10</option>
+				<option value="11">11</option>
+				<option value="12">12</option>
+				<option value="13">13</option>
+				<option value="14">14</option>
+				<option value="15">15</option>
+				<option value="16">Off</option>
+			</options>
+		</state>
+
+	</channel-type>
+
+	<channel-type id="sceneLightDimmer">
+		<item-type>Dimmer</item-type>
+		<label>Scene Light Level</label>
+		<description>Increase/decrease the light level proportionally across the scene.</description>
 		<category>DimmableLight</category>
 		<state min="0" max="100" pattern="%d %%"/>
 	</channel-type>

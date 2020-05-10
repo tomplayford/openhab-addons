@@ -37,7 +37,7 @@ import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.*;
  *
  */
 @NonNullByDefault
-public class DimmerHandler extends HelvarHandler {
+public class DimmerHandler extends HelvarDeviceHandler {
 
     private final Logger logger = LoggerFactory.getLogger(DimmerHandler.class);
 

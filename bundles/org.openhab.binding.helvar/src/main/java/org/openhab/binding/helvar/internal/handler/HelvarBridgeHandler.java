@@ -11,18 +11,21 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.helvar.internal;
+package org.openhab.binding.helvar.internal.handler;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.config.core.status.ConfigStatusMessage;
 import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.thing.binding.ConfigStatusBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
+import org.openhab.binding.helvar.internal.HelvarAddress;
+import org.openhab.binding.helvar.internal.HelvarCommand;
+import org.openhab.binding.helvar.internal.HelvarCommandType;
 import org.openhab.binding.helvar.internal.config.HelvarBridgeConfig;
 import org.openhab.binding.helvar.internal.net.TelnetSession;
 import org.openhab.binding.helvar.internal.net.TelnetSessionListener;
 import org.openhab.binding.helvar.internal.parser.HelvarCommandParser;
-import org.openhab.binding.helvar.internal.parser.UnsupportedCommand;
+import org.openhab.binding.helvar.internal.exception.UnsupportedCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +159,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
             case QUERY_DEVICE_STATE:
                 // Expecting full address and a value
 
-                HelvarHandler handler = findThingHandler(command.getAddress());
+                HelvarDeviceHandler handler = findThingHandler(command.getAddress());
 
                 if (isNull(handler)) {
                     logger.trace("Received a '{}' REPLY from Router @{}.{} with address {}. " +
@@ -168,6 +171,32 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
                 handler.handleRouterCommand(command);
 
                 break;
+
+            case QUERY_LAST_SCENE_IN_BLOCK:
+            case QUERY_LAST_SCENE_IN_GROUP:
+                // Commands to Groups
+                int groupId;
+
+                try {
+                    groupId = command.getGroupId();
+                } catch (Exception e) {
+                    logger.warn("Received a '{}' REPLY from Router @{}.{} with no GroupId. Ignoring message.",
+                            command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId());
+                    return;
+                }
+
+                GroupHandler groupHandler = findThingHandler(groupId);
+
+                if (isNull(groupHandler)) {
+                    logger.trace("Received a '{}' REPLY from Router @{}.{} for groupId {}. " +
+                                    "Couldn't find Thing with that groupId. Ignoring message.", command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(), groupId);
+                    return;
+                }
+
+                groupHandler.handleRouterCommand(command);
+
             case QUERY_CLUSTERS:
 
                 break;
@@ -184,13 +213,13 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
-    private HelvarHandler findThingHandler(HelvarAddress address) {
+    private HelvarDeviceHandler findThingHandler(HelvarAddress address) {
 
         // TODO: find a better way of looking up a Thing based on it's address. This seems pretty horrid.
 
         for (Thing thing : getThing().getThings()) {
-            if (thing.getHandler() instanceof HelvarHandler) {
-                HelvarHandler handler = (HelvarHandler) thing.getHandler();
+            if (thing.getHandler() instanceof HelvarDeviceHandler) {
+                HelvarDeviceHandler handler = (HelvarDeviceHandler) thing.getHandler();
 
                 try {
                     if (handler != null && handler.getAddress().equals(address)) {
@@ -206,7 +235,30 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
-    private synchronized void connect() {
+    private GroupHandler findThingHandler(int groupId) {
+
+        // TODO: find a better way of looking up a Thing based on it's address. This seems pretty horrid.
+
+        for (Thing thing : getThing().getThings()) {
+            if (thing.getHandler() instanceof GroupHandler) {
+                GroupHandler handler = (GroupHandler) thing.getHandler();
+
+                try {
+                    if (handler != null && handler.getGroupId() == groupId) {
+                        return handler;
+                    }
+                } catch (IllegalStateException e) {
+                    logger.trace("Handler for groupId {} not initialized", groupId);
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+
+        private synchronized void connect() {
 
         if (this.session.isConnected()) {
             logger.debug("Already connected");
@@ -328,7 +380,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         this.sendCommand(new HelvarCommand(QUERY_DEVICE_TYPES_AND_ADDRESSES, new HelvarAddress(0,1,1, null)));
     }
 
-    void sendCommand(HelvarCommand command) {
+    public void sendCommand(HelvarCommand command) {
         this.sendQueue.add(command);
     }
 

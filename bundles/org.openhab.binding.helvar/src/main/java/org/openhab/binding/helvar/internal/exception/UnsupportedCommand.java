@@ -11,9 +11,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.helvar.internal.parser;
-
-import org.openhab.binding.helvar.internal.HelvarHandler;
+package org.openhab.binding.helvar.internal.exception;
 
 /**
  * Unsupported Helvar Command exception

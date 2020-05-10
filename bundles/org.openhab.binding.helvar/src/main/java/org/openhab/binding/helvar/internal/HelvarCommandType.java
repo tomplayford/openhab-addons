@@ -13,6 +13,8 @@
 
 package org.openhab.binding.helvar.internal;
 
+import org.openhab.binding.helvar.internal.exception.UnsupportedCommand;
+
 import java.util.Arrays;
 
 
@@ -32,9 +34,12 @@ public enum HelvarCommandType {
     QUERY_DEVICE_STATE(110, "Query Device State"),
     QUERY_DEVICE_LOAD_LEVEL(152, "Query Device Load Level"),
     QUERY_ROUTER_TIME(185, "Query Router Time"),
+    QUERY_LAST_SCENE_IN_GROUP(109, "Query last scene selected in a group."),
+    QUERY_LAST_SCENE_IN_BLOCK(103, "Query last scene selected in a group block."),
 
     // Command
-    DIRECT_LEVEL_DEVICE(14,"Direct Level, Device");
+    DIRECT_LEVEL_DEVICE(14,"Direct Level, Device"),
+    RECALL_SCENE(11, "Recall Scene");
 
     private final int commandId;
     private final String commandName;
@@ -55,13 +60,13 @@ public enum HelvarCommandType {
 
     /**
      * @return the Enum representation for the given string.
-     * @throws IllegalArgumentException if unknown string.
+     * @throws UnsupportedCommand if unknown string.
      */
-    public static HelvarCommandType fromInteger(int i) throws IllegalArgumentException {
+    public static HelvarCommandType fromInteger(int i) throws UnsupportedCommand {
         return Arrays.stream(HelvarCommandType.values())
                 .filter(v -> v.commandId == i)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("unknown value: " + i));
+                .orElseThrow(() -> new UnsupportedCommand("Unknown Helvar Command Value: " + i));
     }
 
 }

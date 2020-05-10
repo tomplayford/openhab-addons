@@ -14,8 +14,7 @@
 package org.openhab.binding.helvar.internal;
 
 import static java.util.Objects.isNull;
-import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.COMMAND;
-import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.VERSION;
+import static org.openhab.binding.helvar.internal.HelvarCommandParameterType.*;
 
 /**
  * Represents a Helvar Command.
@@ -34,7 +33,7 @@ public class HelvarCommand {
     private String queryResponse;
 
     //    private final int integrationId;
-    private final Object[] parameters;
+    private final HelvarCommandParameter[] parameters;
 
     private final HelvarMessageType defaultMessageType = HelvarMessageType.COMMAND;
     private final String defaultHelvarNetVersion = "1";
@@ -74,7 +73,7 @@ public class HelvarCommand {
         return this.commandType;
     }
 
-    public Object[] getParameters() {
+    public HelvarCommandParameter[] getParameters() {
         return this.parameters;
     }
 
@@ -98,6 +97,16 @@ public class HelvarCommand {
         };
 
         return parameters;
+    }
+
+    public int getGroupId() throws Exception {
+
+        for (HelvarCommandParameter param : this.parameters) {
+            if (param.commandParameterType == GROUP) {
+                return Integer.parseInt(param.argument);
+            }
+        }
+        throw new Exception("No Group");
     }
 
     /**

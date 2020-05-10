@@ -14,6 +14,7 @@
 package org.openhab.binding.helvar.internal.parser;
 
 import org.openhab.binding.helvar.internal.*;
+import org.openhab.binding.helvar.internal.exception.UnsupportedCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;

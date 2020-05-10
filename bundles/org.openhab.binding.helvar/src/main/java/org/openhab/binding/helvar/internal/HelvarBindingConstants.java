@@ -26,13 +26,16 @@ public class HelvarBindingConstants {
 
     private static final String BINDING_ID = "helvar";
 
-    public static final ThingTypeUID THING_TYPE_ROUTER = new ThingTypeUID(BINDING_ID, "router");
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_DIMMER = new ThingTypeUID(BINDING_ID, "dimmer");
+    public static final ThingTypeUID THING_TYPE_ROUTER = new ThingTypeUID(BINDING_ID, "router");
+    public static final ThingTypeUID THING_TYPE_GROUP = new ThingTypeUID(BINDING_ID, "group");
 
     // List of all Channel ids
     public static final String CHANNEL_LIGHTLEVEL = "lightlevel";
+    public static final String SCENE_LIGHTLEVEL = "sceneLightLevel";
+    public static final String SCENE_SELECTION = "scene";
 
     // Bridge config properties
     public static final String HOST = "hostName";

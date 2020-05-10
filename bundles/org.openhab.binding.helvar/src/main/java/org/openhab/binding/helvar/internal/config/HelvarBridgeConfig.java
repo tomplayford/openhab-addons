@@ -14,7 +14,7 @@
 package org.openhab.binding.helvar.internal.config;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.helvar.internal.HelvarBridgeHandler;
+import org.openhab.binding.helvar.internal.handler.HelvarBridgeHandler;
 
 /**
  * Configuration for the {@link HelvarBridgeHandler}.
