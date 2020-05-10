@@ -16,6 +16,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.thing.*;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.openhab.binding.helvar.internal.exception.InvalidAddress;
 import org.openhab.binding.helvar.internal.exception.NotFoundInCommand;
@@ -213,6 +214,19 @@ public class GroupHandler extends BaseHelvarHandler {
         }
 
         updateGroupScene(scene, block);
+        updateDevices(scene, block);
+
+    }
+
+    private void updateDevices(int scene, int block) {
+
+        for (HelvarAddress address : this.devices) {
+            HelvarDeviceHandler thing = this.getBridgeHandler().findThingHandler(address);
+            if (thing != null) {
+                thing.setToScene(scene, block);
+            }
+
+        }
 
     }
 

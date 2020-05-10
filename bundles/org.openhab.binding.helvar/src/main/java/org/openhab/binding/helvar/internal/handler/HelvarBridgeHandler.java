@@ -249,7 +249,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
-    private HelvarDeviceHandler findThingHandler(HelvarAddress address) {
+    public HelvarDeviceHandler findThingHandler(HelvarAddress address) {
 
         // TODO: find a better way of looking up a Thing based on it's address. This seems pretty horrid.
 
@@ -271,7 +271,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
-    private GroupHandler findThingHandler(int groupId) {
+    public GroupHandler findThingHandler(int groupId) {
 
         // TODO: find a better way of looking up a Thing based on it's address. This seems pretty horrid.
 

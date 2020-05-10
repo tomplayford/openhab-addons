@@ -165,4 +165,30 @@ public abstract class HelvarDeviceHandler extends BaseHelvarHandler {
     }
 
 
+    /*
+    *
+    *
+     */
+    public void setToScene(int scene, int block) {
+        int loc = ((block - 1) * 16) + (scene - 1);
+
+        SceneLevel sceneLevel = this.sceneLevels[loc];
+
+        if (sceneLevel.getType() == SceneLevelType.VALUE) {
+
+            Double load = sceneLevel.getValue();
+
+            if (load > 100) {
+                load = 0.0d;
+            }
+
+            logger.debug("Updating thing {} channel 'CHANNEL_LIGHTLEVEL' to valve of {}", this.toString(), load);
+
+            updateState(CHANNEL_LIGHTLEVEL, new PercentType(new BigDecimal(load)));
+
+        }
+
+
+    }
+
 }
