@@ -13,6 +13,8 @@
 
 package org.openhab.binding.helvar.internal.parser;
 
+import org.openhab.binding.helvar.internal.exception.NotFoundInCommand;
+
 import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType.*;
 
@@ -36,7 +38,7 @@ public class HelvarCommand {
     private final HelvarCommandParameter[] parameters;
 
     private final HelvarMessageType defaultMessageType = HelvarMessageType.COMMAND;
-    private final String defaultHelvarNetVersion = "1";
+    private final String defaultHelvarNetVersion = "2";
     private final String defaultHelvarTerminationChar = "#";
 
     public HelvarCommand(HelvarCommandType commandType, HelvarCommandParameter... parameters) {
@@ -99,14 +101,34 @@ public class HelvarCommand {
         return parameters;
     }
 
-    public int getGroupId() throws Exception {
+    public int getGroupId() throws NotFoundInCommand {
 
         for (HelvarCommandParameter param : this.parameters) {
             if (param.commandParameterType == GROUP) {
                 return Integer.parseInt(param.argument);
             }
         }
-        throw new Exception("No Group");
+        throw new NotFoundInCommand("No Group");
+    }
+
+    public int getBlockId() throws NotFoundInCommand {
+
+        for (HelvarCommandParameter param : this.parameters) {
+            if (param.commandParameterType == BLOCK) {
+                return Integer.parseInt(param.argument);
+            }
+        }
+        throw new NotFoundInCommand("No Block");
+    }
+
+    public int getSceneId() throws NotFoundInCommand {
+
+        for (HelvarCommandParameter param : this.parameters) {
+            if (param.commandParameterType == SCENE) {
+                return Integer.parseInt(param.argument);
+            }
+        }
+        throw new NotFoundInCommand("No Scene");
     }
 
     /**

@@ -47,7 +47,6 @@ public class GroupConfig {
         this.blockId = blockId;
     }
 
-
     public Boolean checkConfigIsValid() {
         if (this.groupId == null || this.groupId > 16383 || this.groupId < 1) {
             return false;

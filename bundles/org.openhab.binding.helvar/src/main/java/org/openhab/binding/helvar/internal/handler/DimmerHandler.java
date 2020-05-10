@@ -105,9 +105,17 @@ public class DimmerHandler extends HelvarDeviceHandler {
 //            updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
             queryDeviceState();
             queryDeviceLoad();
+            queryDeviceGroupLevels();
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
         }
+    }
+
+    private void queryDeviceGroupLevels() {
+        sendCommand(new HelvarCommand(
+                HelvarCommandType.QUERY_SCENE_INFO,
+                this.getAddress()
+        ));
     }
 
     @Override

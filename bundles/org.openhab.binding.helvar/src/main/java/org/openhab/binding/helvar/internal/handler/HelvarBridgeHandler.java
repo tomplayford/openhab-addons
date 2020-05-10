@@ -106,7 +106,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
             logger.debug("Received message {}", line);
 
-            // System is alive, cancel reconnect task.
+            // System is alive, ALIVE!, cancel reconnect task.
             if (this.keepAliveReconnect != null) {
                 this.keepAliveReconnect.cancel(true);
             }
@@ -123,10 +123,13 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
             switch (helvarCommand.getMessageType()) {
                 case COMMAND:
-                    logger.warn("Received a COMMAND from Router @{}.{} this shouldn't happen: {}",
+                    // Commands can come from the router if HelvarNet Broadcast messaging is enabled.
+                    // This allows us to listen to scene chances - great!
+                    logger.trace("Received a COMMAND from Router @{}.{}: {}",
                             this.helvarBridgeConfig.getClusterId(),
                             this.helvarBridgeConfig.getRouterId(),
                             line);
+                    handleCommandCommand(helvarCommand);
                     break;
                 case INTERNAL_COMMAND:
                     logger.debug("Received an INTERNAL_COMMAND from Router @{}.{} not " +
@@ -152,12 +155,44 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
         }
     }
 
+    private void handleCommandCommand(HelvarCommand command) {
+
+        switch (command.getCommandType()) {
+            case RECALL_SCENE:
+                // Broadcast message from Router about a scene change.
+                int groupId;
+
+                try {
+                    groupId = command.getGroupId();
+                } catch (Exception e) {
+                    logger.warn("Received a '{}' REPLY from Router @{}.{} with no GroupId. Ignoring message.",
+                            command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId());
+                    return;
+                }
+
+                GroupHandler groupHandler = findThingHandler(groupId);
+
+                if (isNull(groupHandler)) {
+                    logger.trace("Received a '{}' REPLY from Router @{}.{} for groupId {}. " +
+                                    "Couldn't find Thing with that groupId. Ignoring message.", command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId(), groupId);
+                    return;
+                }
+
+                groupHandler.handleRouterCommand(command);
+        }
+    }
+
     private void handleReplyCommand(HelvarCommand command) {
 
         switch (command.getCommandType()) {
             case QUERY_DEVICE_LOAD_LEVEL:
             case QUERY_DEVICE_STATE:
+            case QUERY_SCENE_INFO:
+                // Command to Devices
                 // Expecting full address and a value
+
 
                 HelvarDeviceHandler handler = findThingHandler(command.getAddress());
 
@@ -174,6 +209,7 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
             case QUERY_LAST_SCENE_IN_BLOCK:
             case QUERY_LAST_SCENE_IN_GROUP:
+            case QUERY_GROUP:
                 // Commands to Groups
                 int groupId;
 

@@ -13,6 +13,8 @@
 
 package org.openhab.binding.helvar.internal.parser;
 
+import org.openhab.binding.helvar.internal.exception.InvalidAddress;
+
 import static java.util.Objects.isNull;
 import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType.ADDRESS;
 
@@ -49,6 +51,32 @@ public class HelvarAddress extends HelvarCommandParameter {
         this.routerId = routerId;
         this.subnetId = subnetId;
         this.deviceId = deviceId;
+    }
+
+    public HelvarAddress(String address) throws InvalidAddress {
+        super(ADDRESS, "");
+
+        String[] parts = address.replaceAll("@", "").split("\\.");
+        Integer[] addressParts = {null, null, null, null};
+
+        if (parts.length < 1) {
+            throw new InvalidAddress("Cannot parse invalid address string: " + address);
+        }
+
+        try {
+
+            for (int i = 0; i < parts.length; i++) {
+                addressParts[i] = Integer.parseInt(parts[i]);
+            }
+        } catch (NumberFormatException e) {
+            throw new InvalidAddress("Cannot parse invalid address string: " + address);
+        }
+
+        this.clusterId = addressParts[0];
+        this.routerId = addressParts[1];
+        this.subnetId = addressParts[2];
+        this.deviceId = addressParts[3];
+
     }
 
     private String buildCommandArgument(){
