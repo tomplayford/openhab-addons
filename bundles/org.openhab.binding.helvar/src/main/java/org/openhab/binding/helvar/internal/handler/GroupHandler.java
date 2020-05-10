@@ -220,6 +220,8 @@ public class GroupHandler extends BaseHelvarHandler {
 
     private void updateDevices(int scene, int block) {
 
+        logger.debug("Updating group {} devices to levels for scene {}.{}", this.getGroupId(), block, scene);
+
         for (HelvarAddress address : this.devices) {
             HelvarDeviceHandler thing = this.getBridgeHandler().findThingHandler(address);
             if (thing != null) {

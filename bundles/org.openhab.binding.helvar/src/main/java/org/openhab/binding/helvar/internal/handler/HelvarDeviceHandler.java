@@ -118,7 +118,7 @@ public abstract class HelvarDeviceHandler extends BaseHelvarHandler {
                     continue;
                 }
 
-                this.sceneLevels[i] = new SceneLevel(SceneLevelType.LAST_LEVEL, value);
+                this.sceneLevels[i] = new SceneLevel(SceneLevelType.VALUE, value);
             }
 
         }
@@ -170,6 +170,10 @@ public abstract class HelvarDeviceHandler extends BaseHelvarHandler {
     *
      */
     public void setToScene(int scene, int block) {
+
+        logger.debug("Updating device {} levels for scene {}.{}.", this.getAddress(), block, scene);
+
+
         int loc = ((block - 1) * 16) + (scene - 1);
 
         SceneLevel sceneLevel = this.sceneLevels[loc];
