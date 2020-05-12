@@ -27,7 +27,12 @@ import org.openhab.binding.helvar.internal.parser.HelvarCommandType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.openhab.binding.helvar.internal.HelvarBindingConstants.CHANNEL_LIGHTLEVEL;
+import static org.openhab.binding.helvar.internal.HelvarBindingConstants.THING_TYPE_DIMMER;
 import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType.*;
 
 /**
@@ -41,6 +46,8 @@ import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterT
  */
 @NonNullByDefault
 public class DimmerHandler extends HelvarDeviceHandler {
+
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Stream.of(THING_TYPE_DIMMER).collect(Collectors.toSet());
 
     private final Logger logger = LoggerFactory.getLogger(DimmerHandler.class);
 

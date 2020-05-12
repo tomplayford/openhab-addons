@@ -79,14 +79,14 @@ public class HelvarAddress extends HelvarCommandParameter {
 
     }
 
-    private String buildCommandArgument(){
-        String address = this.clusterId + "." + this.routerId;
+    private String buildCommandArgument(String joiningChar){
+        String address = this.clusterId + joiningChar + this.routerId;
 
         if (!isNull(this.subnetId)) {
-            address = address + "." + this.subnetId;
+            address = address + joiningChar + this.subnetId;
 
             if (!isNull(this.deviceId)) {
-                address = address + "." + this.deviceId;
+                address = address + joiningChar + this.deviceId;
 
             }
         }
@@ -94,8 +94,25 @@ public class HelvarAddress extends HelvarCommandParameter {
 
     }
 
+    private String buildCommandArgument(){
+        return this.buildCommandArgument(".");
+    }
+
     public boolean isValidForDevice(){
         return !(isNull(this.clusterId) || isNull(this.routerId) || isNull(this.subnetId) || isNull(this.deviceId));
+    }
+
+    public String getBusType() {
+        switch (this.subnetId) {
+            case 1:
+            case 2:
+                return "DALI";
+            case 3:
+                return "S-DIM";
+            case 4:
+                return "DMX";
+        }
+        return null;
     }
 
     @Override
@@ -103,16 +120,61 @@ public class HelvarAddress extends HelvarCommandParameter {
         return this.commandParameterType + this.buildCommandArgument();
     }
 
+    public String toUID() {
+        return this.buildCommandArgument("-");
+    }
+
     @Override
     public boolean equals(Object other) {
-        if (other instanceof HelvarAddress) {
-            return ((HelvarAddress) other).clusterId.equals(this.clusterId) &&
-                    ((HelvarAddress) other).routerId.equals(this.routerId) &&
-                    ((HelvarAddress) other).subnetId.equals(this.subnetId) &&
-                    ((HelvarAddress) other).deviceId.equals(this.deviceId);
-        }
-        return false;
+        
+        HelvarAddress otherAddress = (HelvarAddress) other;
+        
+        if (this.clusterId != null) {
+            if (otherAddress.clusterId == null) {
+                return false;
+            }
 
+            if (this.clusterId != otherAddress.clusterId){
+                return false;
+            }
+
+        } else if (otherAddress.clusterId != null){
+            return false;
+        }
+
+        if (this.routerId != null) {
+            if (otherAddress.routerId == null) {
+                return false;
+            }
+
+            if (this.routerId != otherAddress.routerId){
+                return false;
+            }
+
+        } else if (otherAddress.routerId != null){
+            return false;
+        }
+        
+        if (this.subnetId != null) {
+            if (otherAddress.subnetId == null) {
+                return false;
+            }
+            if (this.subnetId != otherAddress.subnetId){
+                return false;
+            }
+
+        } else if (otherAddress.subnetId != null){
+            return false;
+        }
+        
+        if (this.deviceId != null) {
+            if (otherAddress.deviceId == null) {
+                return false;
+            }
+
+            return this.deviceId == otherAddress.deviceId;
+
+        } else return otherAddress.deviceId == null;
 
     }
     public Integer getSubnetId(){
@@ -131,6 +193,12 @@ public class HelvarAddress extends HelvarCommandParameter {
         this.deviceId = deviceId;
     }
     
-    
+    public Integer getClusterId() {
+        return this.clusterId;
+    }
+
+    public Integer getRouterId() {
+        return this.routerId;
+    }
 
 }
