@@ -10,6 +10,7 @@ import static org.openhab.binding.helvar.internal.HelvarBindingConstants.THING_T
 
 public enum DeviceType {
 
+    // DALI Devices
     DALI_FLUORESCENT_LAMPS((byte) 0x00, (byte)0x00, (byte)0x01, (byte)0x01, "Fluorescent lamps", THING_TYPE_DIMMER),
     DALI_EMERGENCY_LIGHTING((byte) 0x00, (byte)0x00, (byte)0x01, (byte)0x01, "Emergency lighting", THING_TYPE_DIMMER),
     DALI_DISCHARGE_LAMPS((byte) 0x00, (byte)0x00, (byte)0x02, (byte)0x01, "Discharge lamps", THING_TYPE_DIMMER),
@@ -17,7 +18,14 @@ public enum DeviceType {
     DALI_INCANDESCENT_LAMPS((byte) 0x00, (byte)0x00, (byte)0x04, (byte)0x01, "Incandescent lamps", THING_TYPE_DIMMER),
     DALI_DC_DIMMER((byte) 0x00, (byte)0x00, (byte)0x05, (byte)0x01, "DC dimmer", THING_TYPE_DIMMER),
     DALI_LED_MODULE((byte) 0x00, (byte)0x00, (byte)0x06, (byte)0x01, "LED lamps", THING_TYPE_DIMMER),
-    DALI_RELAY((byte) 0x00, (byte)0x00, (byte)0x07, (byte)0x01, "Relay", THING_TYPE_DIMMER);
+    DALI_RELAY((byte) 0x00, (byte)0x00, (byte)0x07, (byte)0x01, "Relay", THING_TYPE_DIMMER),
+
+    // DMX Devices
+
+    DMX_NO_DEVICE((byte) 0x00, (byte)0x00, (byte)0x00, (byte)0x08, "DMX no device present", null),
+    DMX_CHANNEL_IN((byte) 0x00, (byte)0x00, (byte)0x01, (byte)0x08, "DMX channel in", null),
+    DMX_CHANNEL_OUT((byte) 0x00, (byte)0x00, (byte)0x02, (byte)0x08, "DMX channel out", THING_TYPE_DIMMER);
+
 
     private final byte byte3;
     private final byte byte2;
