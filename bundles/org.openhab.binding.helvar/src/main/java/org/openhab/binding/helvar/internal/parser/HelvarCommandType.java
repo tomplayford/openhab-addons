@@ -30,6 +30,7 @@ import java.util.Arrays;
 public enum HelvarCommandType {
     // Query
     QUERY_CLUSTERS(101, "Query Clusters."),
+    QUERY_GROUP_DESCRIPTION(105, "Query group description."),
     QUERY_DESCRIPTION_DEVICE(106, "Query device description."),
     QUERY_DEVICE_TYPES_AND_ADDRESSES(100, "Query Device Types and Addresses"),
     QUERY_DEVICE_STATE(110, "Query Device State"),
@@ -39,6 +40,8 @@ public enum HelvarCommandType {
     QUERY_LAST_SCENE_IN_GROUP(109, "Query last scene selected in a group."),
     QUERY_LAST_SCENE_IN_BLOCK(103, "Query last scene selected in a group block."),
     QUERY_GROUP(164, "Query devices in group."),
+    QUERY_GROUPS(165, "Query all groups."),
+    QUERY_SCENE_NAMES(166, "Query all scene names in group."),
 
     // Command
     DIRECT_LEVEL_DEVICE(14,"Direct Level, Device"),

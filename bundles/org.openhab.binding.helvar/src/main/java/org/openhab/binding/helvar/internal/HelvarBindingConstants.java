@@ -40,4 +40,22 @@ public class HelvarBindingConstants {
     // Bridge config properties
     public static final String HOST = "hostName";
     public static final String PORT = "port";
+    public static final String CLUSTER_ID = "clusterId";
+    public static final String ROUTER_ID = "routerId";
+
+    // Device config properties
+    public static final String SUBNET_ID = "subnetId";
+    public static final String DEVICE_ID = "deviceId";
+    public static final String DEVICE_TYPE_ID = "deviceTypeId";
+    public static final String DEVICE_TYPE_NAME = "deviceTypeName";
+    public static final String HELVAR_ADDRESS = "helvarAddress";
+    public static final String BUS_TYPE = "busType";
+    public static final String DEVICE_HELVAR_NAME= "deviceHelvarName";
+
+    // Group config properties
+    public static final String GROUP_ID = "groupId";
+    public static final String GROUP_NAME = "groupName";
+
+
+
 }

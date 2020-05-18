@@ -21,13 +21,11 @@ import org.eclipse.smarthome.core.thing.binding.ConfigStatusBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.openhab.binding.helvar.internal.discovery.FoundDevice;
 import org.openhab.binding.helvar.internal.discovery.HelvarDiscoveryService;
-import org.openhab.binding.helvar.internal.parser.HelvarAddress;
-import org.openhab.binding.helvar.internal.parser.HelvarCommand;
-import org.openhab.binding.helvar.internal.parser.HelvarCommandType;
+import org.openhab.binding.helvar.internal.exception.NotFoundInCommand;
+import org.openhab.binding.helvar.internal.parser.*;
 import org.openhab.binding.helvar.internal.config.HelvarBridgeConfig;
 import org.openhab.binding.helvar.internal.net.TelnetSession;
 import org.openhab.binding.helvar.internal.net.TelnetSessionListener;
-import org.openhab.binding.helvar.internal.parser.HelvarCommandParser;
 import org.openhab.binding.helvar.internal.exception.UnsupportedCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -269,7 +267,55 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
                     return;
                 }
 
-                this.handleQueryDescriptionDevice(command);
+                if (this.helvarBridgeConfig.getClusterId() != command.getAddress().getClusterId() ||
+                        this.helvarBridgeConfig.getRouterId() != command.getAddress().getRouterId()) {
+                    logger.debug("Received a {}} command addressed for a different router. Ignoring", command.getCommandType());
+                    return;
+                }
+
+                this.discoveryService.foundDeviceName(command.getAddress(), command.getQueryResponse());
+
+                break;
+            case QUERY_GROUPS:
+                if (this.discoveryService == null) {
+                    // Search stopped
+                    logger.debug("Received a '{}' REPLY from Router @{}.{} but discovery search was stopped. Ignoring",
+                            command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId());
+                    return;
+                }
+
+                this.discoveryService.foundGroups(command.getAddress(), command.getQueryResponse());
+
+                break;
+            case QUERY_GROUP_DESCRIPTION:
+                if (this.discoveryService == null) {
+                    // Search stopped
+                    logger.debug("Received a '{}' REPLY from Router @{}.{} but discovery search was stopped. Ignoring",
+                            command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId());
+                    return;
+                }
+                try {
+                    this.discoveryService.foundGroupName(command.getGroupId(), command.getQueryResponse());
+                } catch (NotFoundInCommand e) {
+                    logger.debug("Received a '{}' REPLY from Router @{}.{} but could not find Group ID in response. Ignoring",
+                            command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId());
+                    return;
+                }
+
+                break;
+            case QUERY_SCENE_NAMES:
+                if (this.discoveryService == null) {
+                    // Search stopped
+                    logger.trace("Received a '{}' REPLY from Router @{}.{} but discovery search was stopped. Ignoring",
+                            command.getCommandType(), this.helvarBridgeConfig.getClusterId(),
+                            this.helvarBridgeConfig.getRouterId());
+                    return;
+                }
+
+                this.discoveryService.foundSceneNames(command.getQueryResponse());
 
                 break;
 
@@ -280,6 +326,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
                 break;
         }
 
+    }
+
+    private void handleQueryGroups(HelvarCommand command) {
     }
 
 
@@ -554,12 +603,15 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
      *  2 - for each device, run a 106 to fetch their names
      *  3 - as responses to 2 come in, send devices back to discovery service
      *
+     * For groups
+     *  1 - query groups to get all group names
+     *  2 -
      */
     public void startSearch(HelvarDiscoveryService discoveryService) {
        
         this.discoveryService = discoveryService;
 
-        // 1 - Query all 4 subnets.
+        // 1 - Query all 4 subnets for devices.
         for(int i=1; i<5; i++) {
             this.sendCommand(new HelvarCommand(QUERY_DEVICE_TYPES_AND_ADDRESSES, new HelvarAddress(
                     helvarBridgeConfig.getClusterId(),
@@ -568,6 +620,9 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
                     null
             )));
         }
+
+        // Query groups
+        this.sendCommand(new HelvarCommand(QUERY_GROUPS));
     }
 
     private void handleQueryDeviceTypesAndAddressesResponse(HelvarCommand command) {
@@ -610,21 +665,6 @@ public class HelvarBridgeHandler extends ConfigStatusBridgeHandler {
 
     }
 
-    private void handleQueryDescriptionDevice(HelvarCommand command) {
-        if (this.discoveryService == null) {
-            logger.debug("Search has been stopped");
-            return;
-        }
-
-        if (this.helvarBridgeConfig.getClusterId() != command.getAddress().getClusterId() ||
-                this.helvarBridgeConfig.getRouterId() != command.getAddress().getRouterId()) {
-            logger.debug("Received a QUERY_DESCRIPTION_DEVICE command addressed for a different router. Ignoring");
-            return;
-        }
-
-        this.discoveryService.foundDeviceName(command.getAddress(), command.getQueryResponse());
-
-    }
 
 
     public void findNamesforfoundDevice(FoundDevice foundDevice) {

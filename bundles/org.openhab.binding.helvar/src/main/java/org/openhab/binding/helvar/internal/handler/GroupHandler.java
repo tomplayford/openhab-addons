@@ -30,9 +30,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.StrictMath.floor;
-import static org.openhab.binding.helvar.internal.HelvarBindingConstants.SCENE_SELECTION;
+import static org.openhab.binding.helvar.internal.HelvarBindingConstants.*;
 import static org.openhab.binding.helvar.internal.parser.HelvarCommandParameterType.*;
 import static org.openhab.binding.helvar.internal.parser.HelvarCommandType.*;
 
@@ -46,6 +49,9 @@ import static org.openhab.binding.helvar.internal.parser.HelvarCommandType.*;
 public class GroupHandler extends BaseHelvarHandler {
 
     private final Logger logger = LoggerFactory.getLogger(DimmerHandler.class);
+
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Stream.of(THING_TYPE_GROUP).collect(Collectors.toSet());
+
 
     private final int DEFAULT_FADE_TIME = 50;
 
