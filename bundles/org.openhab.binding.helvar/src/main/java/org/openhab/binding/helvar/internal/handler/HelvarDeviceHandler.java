@@ -178,20 +178,25 @@ public abstract class HelvarDeviceHandler extends BaseHelvarHandler {
 
         SceneLevel sceneLevel = this.sceneLevels[loc];
 
-        if (sceneLevel.getType() == SceneLevelType.VALUE) {
 
-            Double load = sceneLevel.getValue();
+        switch (sceneLevel.getType()) {
+            case VALUE:
+                Double load = sceneLevel.getValue();
 
-            if (load > 100) {
-                load = 0.0d;
-            }
+                if (load > 100) {
+                    load = 0.0d;
+                }
 
-            logger.debug("Updating thing {} channel 'CHANNEL_LIGHTLEVEL' to valve of {}", this.toString(), load);
+                logger.debug("Updating thing {} channel 'CHANNEL_LIGHTLEVEL' to valve of {}", this.toString(), load);
 
-            updateState(CHANNEL_LIGHTLEVEL, new PercentType(new BigDecimal(load)));
+                updateState(CHANNEL_LIGHTLEVEL, new PercentType(new BigDecimal(load)));
+
+                break;
+            case IGNORE:
+            case LAST_LEVEL:
+                logger.trace("Not Updating thing {} as it is set to IGNORE or LAST_LEVEL for this scene {}.{}.", this.toString(), block, scene);
 
         }
-
 
     }
 

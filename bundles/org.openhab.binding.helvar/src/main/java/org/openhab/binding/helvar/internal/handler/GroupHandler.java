@@ -212,6 +212,9 @@ public class GroupHandler extends BaseHelvarHandler {
             return;
         }
 
+        block = getBlockFromBlockScene(scene);
+        scene = getSceneFromBlockScene(scene);
+
         if (scene > 16 || scene < 1) {
             logger.warn("HelvarGroup Thing handler received a {} Helvar command {} with an unexpected group ID of '{}' should be between 1 and 16. Ignoring", command.getCommandType(), command, scene);
             return;
@@ -240,6 +243,14 @@ public class GroupHandler extends BaseHelvarHandler {
 
     }
 
+    private int getBlockFromBlockScene(Integer blockscene) {
+        return (int) (floor((double) (blockscene -1 ) / 16) + 1);
+    }
+
+    private int getSceneFromBlockScene(Integer blockscene) {
+        return ((blockscene - 1) % 16) + 1;
+    }
+
     private void handleQueryLastScene(HelvarCommand command) {
 
         int scene;
@@ -257,19 +268,19 @@ public class GroupHandler extends BaseHelvarHandler {
 
             if (scene > 128 || scene < 1) {
 
-                logger.warn("HelvarGroup Thing handler received a {} Helvar command {} with an unexpected group ID of '{}' should be between 1 and 128. Ignoring", command.getCommandType(), command, command.getQueryResponse());
+                logger.warn("HelvarGroup Thing handler received a {} Helvar command {} with an unexpected value ID of '{}' should be between 1 and 128. Ignoring", command.getCommandType(), command, command.getQueryResponse());
 
                 return;
             }
 
-            block = (int) (floor((double) (scene -1 ) / 16) + 1);
-            scene = ((scene - 1) % 16) + 1;
+            block = getBlockFromBlockScene(scene);
+            scene = getSceneFromBlockScene(scene);
 
         } else {
 
             if (scene > 16 || scene < 1) {
 
-                logger.warn("HelvarGroup Thing handler received a {} Helvar command {} with an unexpected group ID of '{}' should be between 1 and 16. Ignoring", command.getCommandType(), command, command.getQueryResponse());
+                logger.warn("HelvarGroup Thing handler received a {} Helvar command {} with an unexpected value ID of '{}' should be between 1 and 16. Ignoring", command.getCommandType(), command, command.getQueryResponse());
 
                 return;
             }
