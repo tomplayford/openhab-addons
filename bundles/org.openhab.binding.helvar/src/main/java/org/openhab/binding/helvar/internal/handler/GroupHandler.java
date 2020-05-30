@@ -15,6 +15,7 @@ package org.openhab.binding.helvar.internal.handler;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
+import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.*;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
@@ -52,8 +53,8 @@ public class GroupHandler extends BaseHelvarHandler {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Stream.of(THING_TYPE_GROUP).collect(Collectors.toSet());
 
-
     private final int DEFAULT_FADE_TIME = 50;
+    private final int DEFAULT_BLOCK_ID = 1;
 
     private ArrayList<HelvarAddress> devices;
 
@@ -122,9 +123,8 @@ public class GroupHandler extends BaseHelvarHandler {
 
     private void queryGroupScene() {
         sendCommand(new HelvarCommand(
-                QUERY_LAST_SCENE_IN_BLOCK,
-                new HelvarCommandParameter(GROUP, this.config.getGroupId()),
-                new HelvarCommandParameter(BLOCK, this.config.getBlockId())
+                QUERY_LAST_SCENE_IN_GROUP,
+                new HelvarCommandParameter(GROUP, this.config.getGroupId())
         ));
     }
 
@@ -133,21 +133,23 @@ public class GroupHandler extends BaseHelvarHandler {
         if (channelUID.getId().equals(SCENE_SELECTION)) {
             if (command instanceof RefreshType) {
                 // TODO: handle data refresh
-            } else if (command instanceof DecimalType) {
-                setScene((DecimalType) command);
+            } else if (command instanceof StringType) {
+                setScene((StringType) command);
             } else {
                 logger.warn("GroupHandler is not sure what to do with a command of type {} for SCENE_SELECTION", command.getClass().getName() );
             }
         }
     }
 
-    private void setScene(DecimalType command) {
+    private void setScene(StringType command) {
+
+        String[] block_scene = command.toString().split("\\.");
 
         sendCommand(new HelvarCommand(
                 HelvarCommandType.RECALL_SCENE,
                 new HelvarCommandParameter(GROUP, this.getGroupId()),
-                new HelvarCommandParameter(BLOCK, this.config.getBlockId()),
-                new HelvarCommandParameter(SCENE, command.intValue()),
+                new HelvarCommandParameter(BLOCK, block_scene[0]),
+                new HelvarCommandParameter(SCENE, block_scene[1]),
                 new HelvarCommandParameter(FADE_TIME, this.DEFAULT_FADE_TIME)
         ));
     }
@@ -263,12 +265,6 @@ public class GroupHandler extends BaseHelvarHandler {
             block = (int) (floor((double) (scene -1 ) / 16) + 1);
             scene = ((scene - 1) % 16) + 1;
 
-            if (block != this.config.getBlockId()) {
-                logger.warn("HelvarGroup Thing handler received a {} Helvar command width a different block id of '{}' " +
-                        "which is different to the current static block id of '{}'. Ignoring.", command.getCommandType(), block, this.config.getBlockId());
-                return;
-            }
-
         } else {
 
             if (scene > 16 || scene < 1) {
@@ -278,7 +274,7 @@ public class GroupHandler extends BaseHelvarHandler {
                 return;
             }
 
-            block = this.config.getBlockId();
+            block = this.DEFAULT_BLOCK_ID;
         }
 
         // This is the command we use to verify that a group is "online" - update Thing state.
@@ -292,7 +288,7 @@ public class GroupHandler extends BaseHelvarHandler {
 
         logger.debug("Updating thing {} channel 'SCENE_SELECTION' to valve of {}", this.toString(), scene);
 
-        updateState(SCENE_SELECTION, new DecimalType(scene));
+        updateState(SCENE_SELECTION, new StringType(block + "." + scene));
 
     }
 

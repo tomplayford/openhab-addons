@@ -29,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,9 +49,12 @@ public class HelvarDiscoveryService extends AbstractDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(HelvarDiscoveryService.class);
 
+    private final Pattern SCENE_NAME_REGEX = Pattern
+            .compile("@(?<group>\\d+)\\.(?<block>\\d)\\.(?<scene>\\d+):(?<name>[^,]+)");
 
     private Map<Integer, FoundDevice>[] foundDevices;
     private Map<Integer, FoundGroup> foundGroups;
+    private ArrayList<Scene> scenes;
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.unmodifiableSet(Stream
             .of(DimmerHandler.SUPPORTED_THING_TYPES.stream(), GroupHandler.SUPPORTED_THING_TYPES.stream())
@@ -58,10 +63,11 @@ public class HelvarDiscoveryService extends AbstractDiscoveryService {
     private HelvarBridgeHandler helvarBridgeHandler;
 
     public HelvarDiscoveryService(HelvarBridgeHandler helvarBridgeHandler) {
-        super((Set) null, 0, false);
+        super((Set) null, 20, false);
         this.helvarBridgeHandler = helvarBridgeHandler;
         foundDevices = new Map[]{new HashMap<Integer, FoundDevice>(), new HashMap<Integer, FoundDevice>(), new HashMap<Integer, FoundDevice>(), new HashMap<Integer, FoundDevice>()};
         foundGroups =  new HashMap<Integer, FoundGroup>();
+        scenes = new ArrayList<>();
     }
 
 
@@ -262,13 +268,32 @@ public class HelvarDiscoveryService extends AbstractDiscoveryService {
         if (queryResponse.length() == 0) {
             // No groups defined
             logger.debug("No scene names defined on router.");
+            findGroupNames();
             return;
         }
 
-//        logger.debug("Found {} scene names defined on router {}.", .length, address);
+        scenes.clear();
 
-        // TODO: Handle scene names
+        Matcher matcher = SCENE_NAME_REGEX.matcher(queryResponse);
 
+        while (matcher.find()) {
+
+            Scene scene = new Scene(
+                    Integer.parseInt(matcher.group("group")),
+                    Integer.parseInt(matcher.group("block")),
+                    Integer.parseInt(matcher.group("scene")),
+                    matcher.group("name"));
+            scenes.add(scene);
+
+        }
+
+        logger.debug("Found {} scene names: {}", scenes.size(), scenes);
+
+        findGroupNames();
+
+    }
+
+    private void findGroupNames() {
         for (FoundGroup foundGroup: this.foundGroups.values()) {
 
             this.helvarBridgeHandler.sendCommand(
@@ -281,7 +306,6 @@ public class HelvarDiscoveryService extends AbstractDiscoveryService {
 
 
         }
-
     }
 
 }
